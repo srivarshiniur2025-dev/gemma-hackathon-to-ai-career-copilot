@@ -1,0 +1,13 @@
+{
+  "name": "gemma-hackathon",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "py -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "install:all": "py -m pip install -r requirements.txt && npm install --prefix frontend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
