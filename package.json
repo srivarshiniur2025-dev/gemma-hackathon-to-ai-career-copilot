@@ -1,5 +1,5 @@
 {
-  "name": "gemma-hackathon",
+  "name": "ai-career-copilot",
   "private": true,
   "scripts": {
     "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\"",

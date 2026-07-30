@@ -1,31 +1,79 @@
 # AI Career Copilot
 
-An intelligent career mentor powered by **Gemma** for the Build with Gemma hackathon.
+**Discover your skills. Build your career.** A premium AI career mentor powered by **Gemma 4** for the [Build with Gemma](https://ai.google.dev/) hackathon.
+
+Adaptive assessments, personalized roadmaps, ATS-ready resumes, internship matching, and mock interviews — all guided by Gemma with a unified **Navigator Index** that tracks your progress.
 
 ## Features
 
 - **Adaptive Skill Assessment** — Gemma asks technical questions based on your answers
-- **Learning Roadmap** — Personalized milestones and resources
-- **Resume Builder** — ATS-optimized resumes with job tailoring
+- **Learning Roadmap** — Personalized milestones, resources, and timeline
+- **Resume Builder** — ATS-optimized resumes with job tailoring and scoring
 - **Internship Matcher** — Explainable recommendations with gap analysis
-- **Mock Interview** — Role-specific practice with feedback
-- **Progress Tracking** — Career activity and skill history
+- **Mock Interview** — Role-specific practice with Route Score feedback
+- **Progress Dashboard** — Navigator Index, charts, and career activity history
 
-## Quick Start (integrated)
+## Tech Stack
 
-Run **both** frontend and backend with one command from the project root:
+| Layer | Technologies |
+|-------|----------------|
+| **AI** | Gemma 4 (`gemma-4-27b-it`) via Google GenAI SDK |
+| **Backend** | Python, FastAPI, MongoDB (Motor) |
+| **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS v4 |
+| **Auth** | Demo mode locally; Firebase-ready for production |
+
+## Quick Start
+
+### Prerequisites
+
+- **Node.js** 20+
+- **Python** 3.11+
+- **MongoDB** (optional locally — backend runs in degraded demo mode without it)
+
+### Clone & run (integrated)
 
 ```powershell
+git clone https://github.com/srivarshiniur2025-dev/ai-career-copilot.git
 cd ai-career-copilot
-npm install
+npm run install:all
+npm run dev
+```
+
+Or, if the GitHub repo is still named `gemma-hackathon`:
+
+```powershell
+git clone https://github.com/srivarshiniur2025-dev/gemma-hackathon.git
+cd gemma-hackathon
+npm run install:all
 npm run dev
 ```
 
 - **Website:** http://localhost:3000
 - **API (direct):** http://127.0.0.1:8000
-- **API (via frontend proxy):** http://localhost:3000/api/health
+- **Health check (via proxy):** http://localhost:3000/api/health
 
-The Next.js app proxies all `/api/*` requests to the FastAPI backend, so the frontend and backend work as one integrated app with no CORS issues.
+One command starts **both** the FastAPI backend and Next.js frontend. The frontend proxies `/api/*` to the backend — no CORS setup required.
+
+### Environment variables
+
+**Backend** — copy `.env.example` to `.env` in the project root:
+
+```env
+GOOGLE_API_KEY=your_google_api_key_here
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=career_copilot
+```
+
+**Frontend** — copy `frontend/.env.example` to `frontend/.env.local`:
+
+```env
+BACKEND_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_WS_URL=ws://127.0.0.1:8000
+```
+
+**Never commit `.env` files or hardcode API keys.** All Gemma calls run server-side in FastAPI only; the frontend never receives the Google API key.
+
+Without `GOOGLE_API_KEY`, the app runs in **demo mode** with mock assessment, internship, and interview data.
 
 ### Run separately (optional)
 
@@ -42,82 +90,62 @@ npm install
 npm run dev
 ```
 
-### Environment variables
-
-Copy `.env.example` to `.env` in the project root and set your Google API key:
-
-```
-GOOGLE_API_KEY=your_google_api_key_here
-```
-
-**Never commit `.env` or hardcode API keys in source files.** All Gemma/Google AI calls run server-side in the FastAPI backend only; the Next.js frontend proxies `/api/*` to the backend and does not receive the key.
-
-`GEMINI_API_KEY` is still accepted by the backend for backward compatibility, but `GOOGLE_API_KEY` is preferred.
-
-## Tech Stack
-
-- **AI:** Gemma 4 (`gemma-4-26b-a4b-it`) via Gemini API
-- **Backend:** Python, FastAPI
-- **Frontend:** Next.js, React, Tailwind CSS
-- **Storage:** JSON file (MVP — swap for Firebase/MongoDB in production)
-
 ## Hackathon Demo Flow
 
-1. Landing page → **Get Started**
-2. Fill onboarding form → **Dashboard**
-3. **Skill Assessment** → answer 5–6 adaptive questions
-4. **Roadmap** → generate personalized plan
-5. **Resume** → generate + optional ATS optimize
-6. **Internships** → get matched opportunities
-7. **Mock Interview** → practice and get score
+1. **Landing page** — scroll through the career journey → **Get Started**
+2. **Onboarding** — fill profile → **Dashboard**
+3. **Skill Assessment** — answer adaptive Gemma questions
+4. **Roadmap** — generate a personalized learning plan
+5. **Resume** — build and ATS-optimize your resume
+6. **Internships** — get matched opportunities with explanations
+7. **Mock Interview** — practice with live feedback and Route Score
+
+## Project Structure
+
+```
+ai-career-copilot/
+├── backend/          # FastAPI + Gemma services
+├── frontend/         # Next.js app (landing + dashboard)
+├── vercel.json       # Full-stack deploy config
+├── pyproject.toml    # Python project metadata
+└── package.json      # Root dev scripts (npm run dev)
+```
 
 ## Deploy
 
 ### Full-stack on Vercel (recommended)
 
-Root `vercel.json` uses Vercel **Services** (Next.js + FastAPI). Root `pyproject.toml` sets `entrypoint = "backend.main:app"` so Vercel finds the FastAPI app.
+Root `vercel.json` uses Vercel **Services** (Next.js + FastAPI).
 
 1. Import the GitHub repo in [Vercel](https://vercel.com/new).
-2. **Root Directory:** leave as repository root (`.`).
-3. **Framework Preset:** should detect **Services** from `vercel.json`.
-4. Add environment variables for the **backend** service (Project → Settings → Environment Variables):
+2. **Root Directory:** repository root (`.`).
+3. Add environment variables for the **backend** service:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `GOOGLE_API_KEY` | Yes | Gemma / Google AI — backend only, never on frontend |
-| `MONGODB_URI` | Yes | e.g. MongoDB Atlas connection string |
+| `GOOGLE_API_KEY` | Yes | Gemma / Google AI — backend only |
+| `MONGODB_URI` | Yes | MongoDB Atlas connection string |
 | `MONGODB_DB` | No | Default: `career_copilot` |
-| `FIREBASE_PROJECT_ID` | Yes | Firebase Auth |
-| `CORS_ORIGINS` | No | Your Vercel URL, e.g. `https://your-app.vercel.app` |
+| `FIREBASE_PROJECT_ID` | For prod auth | Firebase project ID |
+| `CORS_ORIGINS` | No | e.g. `https://your-app.vercel.app` |
 
-5. Deploy. Routing:
+4. Deploy. Routing:
    - `/api/*` → FastAPI backend
-   - `/ws/*` → FastAPI WebSocket (mock interview)
+   - `/ws/*` → WebSocket (mock interview)
    - all other paths → Next.js frontend
 
-`BACKEND_URL` is injected for SSR via service binding. `NEXT_PUBLIC_WS_URL` is optional — omit it to use same-origin `wss://` in production.
-
-**Note:** WebSockets and MongoDB on serverless have cold-start and duration limits; use MongoDB Atlas.
+`BACKEND_URL` is injected automatically via service binding. `NEXT_PUBLIC_WS_URL` is optional — omit to use same-origin `wss://` in production.
 
 ### Split deploy (alternative)
 
-#### Frontend (Vercel)
-
-1. Set **Root Directory** to `frontend`.
-2. Set environment variables:
+**Frontend (Vercel)** — set Root Directory to `frontend`:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `BACKEND_URL` | Yes (for live API) | FastAPI backend URL — server-side only, used by Next.js rewrites |
-| `NEXT_PUBLIC_WS_URL` | Yes (for live interviews) | WebSocket URL, e.g. `wss://your-app.railway.app` |
+| `BACKEND_URL` | Yes | FastAPI URL for Next.js rewrites |
+| `NEXT_PUBLIC_WS_URL` | Yes | WebSocket URL for interviews |
 
-**Do not** set `GOOGLE_API_KEY` on Vercel frontend — Gemma calls run on the backend only.
-
-Without `BACKEND_URL`, the app runs in **demo mode** with mock data for assessment, internships, and interviews.
-
-#### Backend (Railway / Render)
-
-Deploy the FastAPI backend separately:
+**Backend (Railway / Render):**
 
 ```bash
 uvicorn backend.main:app --host 0.0.0.0 --port $PORT
