@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 gsap.registerPlugin(ScrollTrigger);
 
 const SECTIONS = [
-  { key: "header", label: "Header", text: "Srivarshini UR · SDE Intern Candidate" },
+  { key: "header", label: "Header", text: "Alex Chen · SDE Intern Candidate" },
   { key: "skills", label: "Skills", text: "Python · FastAPI · React · MongoDB · Gemma 4", highlight: ["Python", "Gemma 4"] },
   { key: "exp", label: "Experience", text: "Built AI Career Copilot — full-stack internship platform with adaptive assessments.", weak: ["adaptive"] },
   { key: "projects", label: "Projects", text: "AI Resume Parser · Skill Radar Dashboard · Mock Interview Bot", highlight: ["AI Resume Parser"] },

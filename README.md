@@ -16,7 +16,7 @@ An intelligent career mentor powered by **Gemma** for the Build with Gemma hacka
 Run **both** frontend and backend with one command from the project root:
 
 ```powershell
-cd "C:\Users\Srivarshini UR\Projects\gemma-hackathon"
+cd ai-career-copilot
 npm install
 npm run dev
 ```
