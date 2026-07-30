@@ -79,4 +79,11 @@ GOOGLE_API_KEY=your_google_api_key_here
 
 ## Contributors
 
-See [CONTRIBUTORS.md](CONTRIBUTORS.md) for the full list of team members.
+| GitHub | Role |
+|--------|------|
+| [@srivarshiniur2025-dev](https://github.com/srivarshiniur2025-dev) | Project lead |
+| [@NarainKarthicNS](https://github.com/NarainKarthicNS) | Contributor |
+| [@gamini2025-win](https://github.com/gamini2025-win) | Contributor |
+| [@monicsathyaki07](https://github.com/monicsathyaki07) | Contributor |
+
+> **Note:** GitHub's **Contributors** tab lists people who have **committed code** to this repo. Invited collaborators appear under **Settings → Collaborators** after they accept their invite. See also [CONTRIBUTORS.md](CONTRIBUTORS.md).
