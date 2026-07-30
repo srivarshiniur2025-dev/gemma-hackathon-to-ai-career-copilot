@@ -124,14 +124,3 @@ uvicorn backend.main:app --host 0.0.0.0 --port $PORT
 ```
 
 Set `GOOGLE_API_KEY` and `MONGODB_URI` on the backend host only.
-
-## Contributors
-
-| GitHub | Role |
-|--------|------|
-| [@srivarshiniur2025-dev](https://github.com/srivarshiniur2025-dev) | Project lead |
-| [@NarainKarthicNS](https://github.com/NarainKarthicNS) | Contributor |
-| [@gamini2025-win](https://github.com/gamini2025-win) | Contributor |
-| [@monicsathyaki07](https://github.com/monicsathyaki07) | Contributor |
-
-> **Note:** GitHub's **Contributors** tab lists people who have **committed code** to this repo. Invited collaborators appear under **Settings → Collaborators** after they accept their invite. See also [CONTRIBUTORS.md](CONTRIBUTORS.md).
