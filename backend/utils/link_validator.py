@@ -6,7 +6,7 @@ import asyncio
 
 import httpx
 
-_USER_AGENT = "AI-Career-Copilot/2.0 (link-validator; +https://github.com/srivarshiniur2025-dev/ai-career-copilot)"
+_USER_AGENT = "AI-Career-Copilot/2.0 (link-validator; +https://github.com/srivarshiniur2025-dev/gemma-hackathon-to-ai-career-copilot)"
 _OK_STATUSES = frozenset(range(200, 400))
 
 

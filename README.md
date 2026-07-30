@@ -33,13 +33,13 @@ Adaptive assessments, personalized roadmaps, ATS-ready resumes, internship match
 ### Clone & run (integrated)
 
 ```powershell
-git clone https://github.com/srivarshiniur2025-dev/ai-career-copilot.git
-cd ai-career-copilot
+git clone https://github.com/srivarshiniur2025-dev/gemma-hackathon-to-ai-career-copilot.git
+cd gemma-hackathon-to-ai-career-copilot
 npm run install:all
 npm run dev
 ```
 
-Or, if the GitHub repo is still named `gemma-hackathon`:
+Or clone from the legacy URL (redirects automatically):
 
 ```powershell
 git clone https://github.com/srivarshiniur2025-dev/gemma-hackathon.git
@@ -103,7 +103,7 @@ npm run dev
 ## Project Structure
 
 ```
-ai-career-copilot/
+gemma-hackathon-to-ai-career-copilot/
 ├── backend/          # FastAPI + Gemma services
 ├── frontend/         # Next.js app (landing + dashboard)
 ├── vercel.json       # Full-stack deploy config
