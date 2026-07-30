@@ -112,7 +112,7 @@ function WorkspaceCard({
         transformStyle: "preserve-3d",
       }}
       className={cn(
-        "absolute rounded-[14px] border border-border bg-white/95 backdrop-blur-sm card-shadow",
+        "absolute rounded-[14px] border border-border bg-white card-shadow",
         card.position,
         card.width
       )}

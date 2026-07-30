@@ -1,32 +1,44 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { ArrowRight, Play } from "lucide-react";
-import { motion } from "framer-motion";
-import { AnimatedGrid } from "@/components/landing/AnimatedGrid";
+import { motion, useReducedMotion } from "framer-motion";
 import { HeroWorkspace } from "@/components/landing/HeroWorkspace";
+import { CanvasSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { GEMMA_VERSION } from "@/lib/gemma";
 
+const AnimatedGrid = dynamic(
+  () => import("@/components/landing/AnimatedGrid").then((m) => m.AnimatedGrid),
+  { ssr: false, loading: () => <CanvasSkeleton /> }
+);
+
 export function HeroSection() {
+  const reduceMotion = useReducedMotion();
+
   function scrollToFeatures() {
     document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
   }
+
+  const fadeUp = reduceMotion
+    ? { initial: { opacity: 1, y: 0 }, animate: { opacity: 1, y: 0 } }
+    : {
+        initial: { opacity: 0, y: 24 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const },
+      };
 
   return (
     <section id="hero" className="relative flex min-h-screen items-center overflow-hidden px-6 py-24 lg:px-8">
       <AnimatedGrid />
 
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
-        <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
-        >
+        <motion.div {...fadeUp}>
           <motion.span
-            initial={{ opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.55, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: reduceMotion ? 0 : 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="inline-flex items-center rounded-full border border-border bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-muted-secondary"
           >
             AI-Powered Career Intelligence
@@ -43,9 +55,9 @@ export function HeroSection() {
           </p>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.45, delay: reduceMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="mt-10 flex flex-wrap gap-4"
           >
             <Link href="/assessment">
@@ -66,9 +78,9 @@ export function HeroSection() {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, x: 48, scale: 0.96 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          transition={{ duration: 0.75, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          initial={reduceMotion ? false : { opacity: 0, x: 32 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.55, delay: reduceMotion ? 0 : 0.08, ease: [0.22, 1, 0.36, 1] }}
           className="relative"
         >
           <HeroWorkspace />

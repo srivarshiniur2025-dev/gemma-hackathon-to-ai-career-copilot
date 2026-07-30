@@ -40,8 +40,8 @@ export function ScaleIn({ children, className, delay = 0 }: { children: React.Re
 export function HoverCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <motion.div
-      whileHover={{ y: -4, scale: 1.01 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      whileHover={{ y: -3 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className={cn("cursor-pointer", className)}
     >
       {children}

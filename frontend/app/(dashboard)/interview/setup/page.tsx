@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
+import { createDemoInterviewSession } from "@/lib/mock-fallbacks";
 import type { InterviewFocus } from "@/lib/interview-types";
 import { cn } from "@/lib/utils";
 
@@ -51,8 +52,9 @@ export default function InterviewSetupPage() {
         companyContext,
       });
       router.push(`/interview/${session.session_id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create session");
+    } catch {
+      const demo = createDemoInterviewSession(role, focus, companyContext);
+      router.push(`/interview/${demo.session_id}`);
     } finally {
       setLoading(false);
     }

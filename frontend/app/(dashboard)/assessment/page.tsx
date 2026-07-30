@@ -1,168 +1,246 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Send, User } from "lucide-react";
-import { GemmaBadge, GemmaChatAvatar, GemmaModelTag } from "@/components/gemma/GemmaBrand";
-import { FadeIn } from "@/components/motion/FadeIn";
-import { SkillRadarChart } from "@/components/charts/DashboardCharts";
-import { ProgressBarChart } from "@/components/charts/DashboardCharts";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import dynamic from "next/dynamic";
+import { motion } from "framer-motion";
 import {
-  mockAssessmentMessages,
-  mockRadarData,
-  mockSkillScores,
-  skillDomains,
-} from "@/lib/mock-data";
+  ArrowRight,
+  BarChart3,
+  Brain,
+  Clock,
+  Loader2,
+  Shield,
+  Sparkles,
+  Target,
+} from "lucide-react";
+import { AssessmentSidebar } from "@/components/assessment/AssessmentSidebar";
+import { InsightsPanel } from "@/components/assessment/InsightsPanel";
+import { QuestionWorkspace } from "@/components/assessment/QuestionWorkspace";
+import { ResultsSkeleton } from "@/components/ui/skeleton";
+import { GemmaBadge, GemmaModelTag } from "@/components/gemma/GemmaBrand";
+import { Button } from "@/components/ui/button";
+import { useAssessmentFlow } from "@/hooks/useAssessmentFlow";
+import { ASSESSMENT_SKILLS } from "@/lib/assessment-data";
 
-export default function AssessmentPage() {
-  const [messages, setMessages] = useState(mockAssessmentMessages);
-  const [input, setInput] = useState("");
-  const [questionNum, setQuestionNum] = useState(2);
-  const [completed, setCompleted] = useState(false);
-  const totalQuestions = 6;
+const ResultsDashboard = dynamic(
+  () => import("@/components/assessment/ResultsDashboard").then((m) => m.ResultsDashboard),
+  { loading: () => <ResultsSkeleton /> }
+);
 
-  function sendMessage() {
-    if (!input.trim()) return;
-    setMessages((m) => [...m, { role: "user" as const, content: input }]);
-    setInput("");
-    setTimeout(() => {
-      if (questionNum >= totalQuestions) {
-        setCompleted(true);
-      } else {
-        setMessages((m) => [
-          ...m,
-          { role: "assistant" as const, content: "Great answer! Let's go deeper — explain time complexity of your approach and suggest an optimization." },
-        ]);
-        setQuestionNum((n) => n + 1);
-      }
-    }, 800);
-  }
+const OVERVIEW_FEATURES = [
+  {
+    icon: Brain,
+    title: "Adaptive Questioning",
+    description: "Gemma 4 adjusts difficulty based on your responses across six skill domains.",
+  },
+  {
+    icon: Target,
+    title: "Real Proficiency Scoring",
+    description: "Industry-calibrated evaluation with correctness, explanations, and improvement paths.",
+  },
+  {
+    icon: BarChart3,
+    title: "Comprehensive Report",
+    description: "Radar charts, benchmarks, roadmap, and career readiness metrics upon completion.",
+  },
+  {
+    icon: Shield,
+    title: "Certification-Grade UI",
+    description: "Structured exam workspace — not a chat. Focus on performance, not conversation.",
+  },
+];
 
-  if (completed) {
-    return (
-      <div className="mx-auto max-w-5xl space-y-8">
-        <FadeIn>
-          <h1 className="text-2xl font-extrabold">Assessment Complete</h1>
-          <p className="text-muted">Here&apos;s your comprehensive skill report.</p>
-        </FadeIn>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card><CardHeader><CardTitle>Skill Radar</CardTitle></CardHeader><CardContent><SkillRadarChart data={mockRadarData} /></CardContent></Card>
-          <Card>
-            <CardHeader><CardTitle>Summary</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm font-semibold text-primary">Strengths</p>
-                <ul className="mt-2 space-y-1 text-sm text-muted">
-                  <li>• Strong Python fundamentals</li>
-                  <li>• Good web development knowledge</li>
-                </ul>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-accent">Areas to improve</p>
-                <ul className="mt-2 space-y-1 text-sm text-muted">
-                  <li>• Cyber Security basics</li>
-                  <li>• Cloud deployment</li>
-                </ul>
-              </div>
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Badge>Difficulty: Intermediate</Badge>
-                <Badge variant="secondary">Internship Readiness: 72%</Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
+function AssessmentOverview({
+  welcome,
+  loading,
+  useMock,
+  onStart,
+}: {
+  welcome: string | null;
+  loading: boolean;
+  useMock: boolean;
+  onStart: () => void;
+}) {
   return (
-    <div className="mx-auto max-w-7xl">
-      <FadeIn className="mb-6">
-        <h1 className="text-2xl font-extrabold">Gemma Skill Assessment</h1>
-        <p className="text-muted">Gemma 4 asks adaptive technical questions and estimates your real proficiency.</p>
-        <div className="mt-2 flex items-center gap-2">
-          <GemmaBadge size="sm" />
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      className="mx-auto max-w-3xl py-4 lg:py-8"
+    >
+      <div className="mb-8 text-center">
+        <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+          <GemmaBadge size="md" />
           <GemmaModelTag />
         </div>
-      </FadeIn>
+        <h1 className="font-heading text-3xl font-bold text-foreground-heading lg:text-4xl">
+          Gemma Skill Certification
+        </h1>
+        <p className="mx-auto mt-4 max-w-xl text-muted leading-relaxed">
+          {welcome ??
+            "A professional adaptive assessment powered by Gemma 4. Evaluate your technical proficiency across core career domains."}
+        </p>
+        {useMock && (
+          <p className="mt-2 text-xs text-warning">
+            Demo mode — backend unavailable. Using mock questions for UI preview.
+          </p>
+        )}
+      </div>
 
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left panel */}
-        <Card className="lg:col-span-3">
-          <CardHeader><CardTitle className="text-base">Progress</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted">Question</span>
-                <span className="font-semibold">{questionNum} / {totalQuestions}</span>
+      <div className="mb-8 grid gap-4 sm:grid-cols-2">
+        {OVERVIEW_FEATURES.map(({ icon: Icon, title, description }) => (
+          <div
+            key={title}
+            className="rounded-[24px] border border-border bg-white p-5 transition-shadow hover:shadow-[var(--shadow-hover)]"
+          >
+            <Icon className="mb-3 h-5 w-5 text-accent" />
+            <h3 className="font-heading text-sm font-bold text-foreground-heading">{title}</h3>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted">{description}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-[24px] border border-border bg-background-secondary p-6">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
+          Domains Assessed
+        </p>
+        <div className="mb-6 flex flex-wrap gap-2">
+          {ASSESSMENT_SKILLS.map((skill) => (
+            <span
+              key={skill}
+              className="rounded-full border border-border bg-white px-3 py-1 text-xs font-medium text-muted-secondary"
+            >
+              {skill}
+            </span>
+          ))}
+        </div>
+        <div className="mb-6 flex flex-wrap items-center gap-4 text-sm text-muted">
+          <span className="flex items-center gap-1.5">
+            <Clock className="h-4 w-4" /> ~45–60 min
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-accent" /> Powered by Gemma 4
+          </span>
+        </div>
+        <Button
+          variant="accent"
+          size="lg"
+          onClick={onStart}
+          disabled={loading}
+          className="w-full gap-2 transition-transform hover:scale-[1.01] active:scale-[0.99] sm:w-auto"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Starting Assessment...
+            </>
+          ) : (
+            <>
+              Begin Certification
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </Button>
+      </div>
+    </motion.div>
+  );
+}
+
+export default function AssessmentPage() {
+  const flow = useAssessmentFlow();
+  const {
+    phase,
+    loading,
+    error,
+    useMock,
+    welcome,
+    currentQuestion,
+    evaluation,
+    results,
+    skills,
+    questionNumber,
+    totalQuestions,
+    progressPercent,
+    estimatedMinutesRemaining,
+    answer,
+    setAnswer,
+    insights,
+    startAssessment,
+    submitAnswer,
+    skipQuestion,
+    goToPrevious,
+    continueAfterEvaluation,
+    handleNavigate,
+    handleSkillSelect,
+  } = flow;
+
+  const showSidebar = phase !== "results" || !results;
+  const inQuestionFlow = phase === "question" || phase === "evaluating" || phase === "evaluation";
+
+  return (
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-background">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        {showSidebar && (
+          <AssessmentSidebar
+            phase={phase}
+            skills={skills}
+            progressPercent={progressPercent}
+            estimatedMinutesRemaining={estimatedMinutesRemaining}
+            questionNumber={questionNumber}
+            totalQuestions={totalQuestions}
+            useMock={useMock}
+            onNavigate={handleNavigate}
+            onSkillSelect={handleSkillSelect}
+          />
+        )}
+
+        <div className="flex min-w-0 flex-1 flex-col lg:flex-row">
+          <main className="min-w-0 flex-1 overflow-y-auto p-6 lg:p-8">
+            {error && (
+              <div className="mb-4 rounded-[14px] border border-error/20 bg-error/5 px-4 py-3 text-sm text-error">
+                {error}
               </div>
-              <Progress value={(questionNum / totalQuestions) * 100} className="mt-2" />
-            </div>
-            <div>
-              <p className="text-sm text-muted">Estimated Level</p>
-              <p className="text-lg font-bold text-primary">Intermediate</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted">Current Domain</p>
-              <Badge className="mt-1">Python</Badge>
-            </div>
-          </CardContent>
-        </Card>
+            )}
 
-        {/* Center chat */}
-        <Card className="flex flex-col lg:col-span-6 min-h-[520px]">
-          <CardHeader className="border-b border-border">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <GemmaChatAvatar /> Gemma is assessing you
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-1 flex-col p-0">
-            <div className="flex-1 space-y-4 overflow-y-auto p-6">
-              <AnimatePresence>
-                {messages.map((m, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}
-                  >
-                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${m.role === "assistant" ? "" : "bg-background-secondary"}`}>
-                      {m.role === "assistant" ? <GemmaChatAvatar /> : <User className="h-4 w-4 text-primary mx-auto" />}
-                    </div>
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${m.role === "assistant" ? "bg-background-secondary" : "bg-primary text-white"}`}>
-                      {m.content}
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-            <div className="border-t border-border p-4">
-              <div className="flex gap-2">
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                  placeholder="Type your answer..."
-                  className="flex-1 rounded-xl border border-border bg-background-secondary px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-                />
-                <Button variant="secondary" size="icon" aria-label="Voice input"><Mic className="h-4 w-4" /></Button>
-                <Button size="icon" onClick={sendMessage} aria-label="Send"><Send className="h-4 w-4" /></Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            {phase === "overview" && (
+              <AssessmentOverview
+                welcome={welcome}
+                loading={loading}
+                useMock={useMock}
+                onStart={startAssessment}
+              />
+            )}
 
-        {/* Right panel */}
-        <Card className="lg:col-span-3">
-          <CardHeader><CardTitle className="text-base">Skill Domains</CardTitle></CardHeader>
-          <CardContent>
-            <ProgressBarChart data={mockSkillScores} />
-          </CardContent>
-        </Card>
+            {phase === "results" && results && <ResultsDashboard results={results} />}
+
+            {inQuestionFlow && currentQuestion && (
+              <QuestionWorkspace
+                phase={phase}
+                question={currentQuestion}
+                evaluation={evaluation}
+                questionNumber={questionNumber}
+                totalQuestions={totalQuestions}
+                answer={answer}
+                loading={loading}
+                onAnswerChange={setAnswer}
+                onSubmit={submitAnswer}
+                onSkip={skipQuestion}
+                onPrevious={goToPrevious}
+                onContinue={continueAfterEvaluation}
+              />
+            )}
+          </main>
+
+          {inQuestionFlow && (
+            <div className="border-t border-border bg-background-secondary p-6 lg:border-l lg:border-t-0 lg:bg-white lg:p-6">
+              <InsightsPanel
+                insights={insights}
+                questionNumber={questionNumber}
+                totalQuestions={totalQuestions}
+                progressPercent={progressPercent}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

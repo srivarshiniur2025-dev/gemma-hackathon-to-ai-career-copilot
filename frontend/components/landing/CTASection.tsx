@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 export function CTASection() {
   return (
-    <section id="roadmap" className="px-6 py-24 lg:px-8">
+    <section id="roadmap" className="below-fold-section px-6 py-24 lg:px-8">
       <SectionReveal variant="rotate-in">
         <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[18px] border border-border bg-primary px-8 py-16 text-center md:px-16">
           <h2 className="font-heading text-3xl font-extrabold text-white md:text-4xl">

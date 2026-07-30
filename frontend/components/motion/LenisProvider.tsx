@@ -1,30 +1,44 @@
 "use client";
 
 import { useEffect } from "react";
-import Lenis from "lenis";
 
 export function LenisProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReducedMotion) return;
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (motionQuery.matches) return;
 
-    const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-      touchMultiplier: 1.5,
+    let lenis: InstanceType<typeof import("lenis").default> | null = null;
+    let rafId = 0;
+    let isVisible = document.visibilityState === "visible";
+
+    void import("lenis").then(({ default: Lenis }) => {
+      if (motionQuery.matches) return;
+
+      lenis = new Lenis({
+        duration: 1.0,
+        lerp: 0.1,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+        touchMultiplier: 1.2,
+      });
+
+      function raf(time: number) {
+        if (isVisible && lenis) lenis.raf(time);
+        rafId = requestAnimationFrame(raf);
+      }
+      rafId = requestAnimationFrame(raf);
     });
 
-    let rafId = 0;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
+    function onVisibilityChange() {
+      isVisible = document.visibilityState === "visible";
     }
-    rafId = requestAnimationFrame(raf);
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       cancelAnimationFrame(rafId);
-      lenis.destroy();
+      lenis?.destroy();
     };
   }, []);
 

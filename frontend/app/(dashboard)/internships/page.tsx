@@ -1,27 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useDeferredValue, useState } from "react";
 import {
-  ChevronDown,
-  ChevronUp,
-  ExternalLink,
   Loader2,
-  MapPin,
   Search,
   Shield,
   Sparkles,
   X,
 } from "lucide-react";
 import { FadeIn, HoverCard } from "@/components/motion/FadeIn";
-import { SpamVerdictBadge } from "@/components/internships/SpamVerdictBadge";
+import { InternshipResultCard } from "@/components/internships/InternshipResultCard";
+import { RecommendationCard } from "@/components/internships/RecommendationCard";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
+import {
+  MOCK_INTERNSHIP_RECOMMENDATIONS,
+  MOCK_INTERNSHIP_SEARCH,
+} from "@/lib/mock-fallbacks";
 import type { InternshipSearchResult, VerifiedInternshipRecommendation } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 const tabs = ["Find Internships", "Gemma Match"] as const;
 
@@ -52,6 +54,28 @@ export default function InternshipsPage() {
     if (showRisky) return results;
     return results.filter((r) => r.verdict === "legitimate" && (r.trust_score ?? 100 - r.spam_risk_score) >= 80);
   }, [results, showRisky]);
+
+  const debouncedQuery = useDebouncedValue(query, 250);
+  const deferredResults = useDeferredValue(visibleResults);
+  const deferredRecommendations = useDeferredValue(recommendations);
+
+  const filteredResults = useMemo(() => {
+    if (!debouncedQuery.trim() || results.length === 0) return deferredResults;
+    const q = debouncedQuery.trim().toLowerCase();
+    return deferredResults.filter(
+      (r) =>
+        r.posting.title.toLowerCase().includes(q) ||
+        r.posting.company_name.toLowerCase().includes(q)
+    );
+  }, [debouncedQuery, deferredResults, results.length]);
+
+  const toggleExpanded = useCallback((key: string | null) => {
+    setExpanded(key);
+  }, []);
+
+  const toggleRecommendExpanded = useCallback((key: string | null) => {
+    setRecommendExpanded(key);
+  }, []);
 
   const riskyCount = results.filter(
     (r) => r.verdict !== "legitimate" || (r.trust_score ?? 100 - r.spam_risk_score) < 80
@@ -88,9 +112,9 @@ export default function InternshipsPage() {
       setSearchSource(data.source);
       setCached(data.cached);
     } catch {
-      setResults([]);
-      setSearchMessage("Search failed. Please check your connection and try again.");
-      setSearchSource(null);
+      setResults(MOCK_INTERNSHIP_SEARCH);
+      setSearchMessage("Demo mode — showing sample verified internships (backend unavailable).");
+      setSearchSource("demo");
       setCached(false);
     } finally {
       setLoading(false);
@@ -110,10 +134,12 @@ export default function InternshipsPage() {
       setRecommendSource(data.source);
       setRecommendCached(data.cached);
     } catch {
-      setRecommendations([]);
-      setOverallAdvice(null);
-      setRecommendMessage("Could not load recommendations. Complete your profile and try again.");
-      setRecommendSource(null);
+      setRecommendations(MOCK_INTERNSHIP_RECOMMENDATIONS);
+      setOverallAdvice(
+        "Demo mode — personalized matches based on your profile template. Connect the backend for live job fetching and scam screening."
+      );
+      setRecommendMessage(null);
+      setRecommendSource("demo");
       setRecommendCached(false);
     } finally {
       setRecommendLoading(false);
@@ -249,7 +275,7 @@ export default function InternshipsPage() {
               <div className="text-sm text-muted">
                 {results.length > 0 && (
                   <>
-                    {visibleResults.length} verified result{visibleResults.length !== 1 ? "s" : ""}
+                    {filteredResults.length} verified result{filteredResults.length !== 1 ? "s" : ""}
                     {searchSource && ` · via ${searchSource}`}
                     {cached && " · cached"}
                   </>
@@ -275,88 +301,17 @@ export default function InternshipsPage() {
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {visibleResults.map((item, i) => {
+            {filteredResults.map((item, i) => {
               const key = item.posting.source_url || `${item.posting.title}-${i}`;
-              const isOpen = expanded === key;
-              const trustScore = item.trust_score ?? 100 - item.spam_risk_score;
-              const isVerified = item.verdict === "legitimate" && trustScore >= 80;
-              const flags = item.flags ?? item.red_flags;
-
               return (
-                <FadeIn key={key} delay={i * 0.04}>
+                <FadeIn key={key} delay={Math.min(i * 0.04, 0.4)}>
                   <HoverCard>
-                    <Card className="h-full transition-shadow hover:card-shadow-lg">
-                      <CardContent className="flex h-full flex-col p-6">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="font-bold text-foreground-heading">{item.posting.title}</h3>
-                              <SpamVerdictBadge
-                                verdict={item.verdict}
-                                verified={isVerified}
-                                trustScore={isVerified ? trustScore : undefined}
-                                score={item.spam_risk_score}
-                              />
-                            </div>
-                            <p className="text-sm text-muted">{item.posting.company_name}</p>
-                            <p className="mt-1 flex items-center gap-1 text-xs text-muted">
-                              <MapPin className="h-3 w-3 shrink-0" />
-                              {item.posting.location}
-                              {item.posting.salary && ` · ${item.posting.salary}`}
-                            </p>
-                          </div>
-                        </div>
-
-                        <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-muted">
-                          {item.posting.description}
-                        </p>
-
-                        <div className="mt-4 flex flex-wrap items-center gap-2">
-                          {item.posting.source_url && (
-                            <a
-                              href={item.posting.source_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={buttonVariants({ size: "sm", className: "gap-1 bg-accent hover:bg-accent-hover" })}
-                            >
-                              Apply Now <ExternalLink className="h-3.5 w-3.5" />
-                            </a>
-                          )}
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => setExpanded(isOpen ? null : key)}
-                          >
-                            {isOpen ? (
-                              <>
-                                Less <ChevronUp className="h-4 w-4" />
-                              </>
-                            ) : (
-                              <>
-                                Safety details <ChevronDown className="h-4 w-4" />
-                              </>
-                            )}
-                          </Button>
-                        </div>
-
-                        {isOpen && (
-                          <div className="mt-4 space-y-3 rounded-xl border border-border bg-background-secondary/50 p-4 text-sm">
-                            <p className="leading-relaxed text-muted">{item.reasoning}</p>
-                            {flags.length > 0 && (
-                              <div>
-                                <p className="text-xs font-semibold uppercase text-muted">Flags</p>
-                                <ul className="mt-1 list-inside list-disc space-y-0.5 text-muted">
-                                  {flags.map((flag) => (
-                                    <li key={flag}>{flag}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                    <InternshipResultCard
+                      item={item}
+                      index={i}
+                      expanded={expanded}
+                      onToggle={toggleExpanded}
+                    />
                   </HoverCard>
                 </FadeIn>
               );
@@ -442,84 +397,17 @@ export default function InternshipsPage() {
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {recommendations.map((item, i) => {
+            {deferredRecommendations.map((item, i) => {
               const key = item.posting.source_url || `${item.posting.title}-${i}`;
-              const isOpen = recommendExpanded === key;
-
               return (
-                <FadeIn key={key} delay={i * 0.05}>
+                <FadeIn key={key} delay={Math.min(i * 0.05, 0.4)}>
                   <HoverCard>
-                    <Card className="h-full transition-shadow hover:card-shadow-lg">
-                      <CardContent className="flex h-full flex-col p-6">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="font-bold text-foreground-heading">{item.posting.title}</h3>
-                              <SpamVerdictBadge
-                                verdict={item.verdict}
-                                verified
-                                trustScore={item.trust_score}
-                              />
-                            </div>
-                            <p className="text-sm text-muted">{item.posting.company_name}</p>
-                            <p className="mt-1 flex items-center gap-1 text-xs text-muted">
-                              <MapPin className="h-3 w-3 shrink-0" />
-                              {item.posting.location}
-                              {item.posting.salary && ` · ${item.posting.salary}`}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-extrabold text-accent">{item.match_score}%</p>
-                            <p className="text-xs text-muted">match</p>
-                          </div>
-                        </div>
-
-                        <p className="mt-4 text-sm leading-relaxed text-muted">{item.why_recommended}</p>
-
-                        <div className="mt-4 flex flex-wrap gap-3">
-                          {item.missing_skills.length > 0 && (
-                            <div>
-                              <p className="text-xs font-semibold uppercase text-muted">Skill gaps</p>
-                              <div className="mt-1 flex flex-wrap gap-1">
-                                {item.missing_skills.map((s) => (
-                                  <Badge key={s} variant="secondary">
-                                    {s}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {item.posting.source_url && (
-                            <a
-                              href={item.posting.source_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={buttonVariants({ size: "sm", className: "gap-1 bg-accent hover:bg-accent-hover" })}
-                            >
-                              Apply Now <ExternalLink className="h-3.5 w-3.5" />
-                            </a>
-                          )}
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setRecommendExpanded(isOpen ? null : key)}
-                          >
-                            {isOpen ? "Hide plan" : "Improvement plan"}
-                          </Button>
-                        </div>
-
-                        {isOpen && item.improvement_plan.length > 0 && (
-                          <ul className="mt-3 list-inside list-disc space-y-1 text-sm text-muted">
-                            {item.improvement_plan.map((step) => (
-                              <li key={step}>{step}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </CardContent>
-                    </Card>
+                    <RecommendationCard
+                      item={item}
+                      index={i}
+                      expanded={recommendExpanded}
+                      onToggle={toggleRecommendExpanded}
+                    />
                   </HoverCard>
                 </FadeIn>
               );

@@ -12,6 +12,10 @@ interface Node {
   connected: boolean;
 }
 
+function isMobileViewport() {
+  return window.matchMedia("(max-width: 768px)").matches;
+}
+
 export function AnimatedGrid() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
@@ -31,13 +35,18 @@ export function AnimatedGrid() {
     let animationId = 0;
     let nodes: Node[] = [];
     let lastSpawn = 0;
-    const GRID = 48;
-    const SPAWN_INTERVAL = 3500;
+    let lastFrameTime = 0;
+    let isVisible = document.visibilityState === "visible";
+    const mobile = isMobileViewport();
+    const GRID = mobile ? 64 : 48;
+    const SPAWN_INTERVAL = mobile ? 5000 : 3500;
+    const MAX_CLUSTER = mobile ? 2 : 3;
+    const FRAME_BUDGET_MS = mobile ? 1000 / 30 : 1000 / 45;
 
     function resize() {
       const parent = canvas.parentElement;
       if (!parent) return;
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2);
       canvas.width = parent.clientWidth * dpr;
       canvas.height = parent.clientHeight * dpr;
       canvas.style.width = `${parent.clientWidth}px`;
@@ -50,7 +59,7 @@ export function AnimatedGrid() {
       const h = canvas.clientHeight;
       const cx = Math.random() * w * 0.6 + w * 0.2;
       const cy = Math.random() * h * 0.6 + h * 0.2;
-      const count = 3 + Math.floor(Math.random() * 3);
+      const count = MAX_CLUSTER + Math.floor(Math.random() * 2);
 
       for (let i = 0; i < count; i++) {
         nodes.push({
@@ -87,6 +96,14 @@ export function AnimatedGrid() {
     }
 
     function draw(time: number) {
+      animationId = requestAnimationFrame(draw);
+
+      if (!isVisible) return;
+
+      const delta = time - lastFrameTime;
+      if (delta < FRAME_BUDGET_MS) return;
+      lastFrameTime = time;
+
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       drawCtx.clearRect(0, 0, w, h);
@@ -109,16 +126,17 @@ export function AnimatedGrid() {
         const dy = mouseRef.current.y - node.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 120 && dist > 0) {
-          const force = (120 - dist) / 120 * 0.15;
+          const force = ((120 - dist) / 120) * 0.15;
           node.x -= (dx / dist) * force;
           node.y -= (dy / dist) * force;
         }
 
-        const alpha = node.life < 30
-          ? node.life / 30
-          : node.life > node.maxLife - 40
-            ? (node.maxLife - node.life) / 40
-            : 1;
+        const alpha =
+          node.life < 30
+            ? node.life / 30
+            : node.life > node.maxLife - 40
+              ? (node.maxLife - node.life) / 40
+              : 1;
 
         drawCtx.beginPath();
         drawCtx.arc(node.x, node.y, 2, 0, Math.PI * 2);
@@ -134,8 +152,10 @@ export function AnimatedGrid() {
           const dy = a.y - b.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < 100 && a.connected && b.connected) {
-            const alphaA = a.life < 30 ? a.life / 30 : a.life > a.maxLife - 40 ? (a.maxLife - a.life) / 40 : 1;
-            const alphaB = b.life < 30 ? b.life / 30 : b.life > b.maxLife - 40 ? (b.maxLife - b.life) / 40 : 1;
+            const alphaA =
+              a.life < 30 ? a.life / 30 : a.life > a.maxLife - 40 ? (a.maxLife - a.life) / 40 : 1;
+            const alphaB =
+              b.life < 30 ? b.life / 30 : b.life > b.maxLife - 40 ? (b.maxLife - b.life) / 40 : 1;
             drawCtx.beginPath();
             drawCtx.moveTo(a.x, a.y);
             drawCtx.lineTo(b.x, b.y);
@@ -145,8 +165,6 @@ export function AnimatedGrid() {
           }
         }
       }
-
-      animationId = requestAnimationFrame(draw);
     }
 
     function onMove(e: MouseEvent) {
@@ -158,17 +176,24 @@ export function AnimatedGrid() {
       mouseRef.current = { x: -1000, y: -1000 };
     }
 
+    function onVisibilityChange() {
+      isVisible = document.visibilityState === "visible";
+      if (isVisible) lastFrameTime = 0;
+    }
+
     resize();
     spawnCluster();
     animationId = requestAnimationFrame(draw);
 
     window.addEventListener("resize", resize);
-    canvas.addEventListener("mousemove", onMove);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    canvas.addEventListener("mousemove", onMove, { passive: true });
     canvas.addEventListener("mouseleave", onLeave);
 
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       canvas.removeEventListener("mousemove", onMove);
       canvas.removeEventListener("mouseleave", onLeave);
     };

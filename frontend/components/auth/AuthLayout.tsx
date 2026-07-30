@@ -84,7 +84,7 @@ export function AuthPreview() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute bottom-0 right-4 w-64 rounded-[14px] border border-border bg-white/90 p-4 shadow-lg backdrop-blur-sm"
+          className="absolute bottom-0 right-4 w-64 rounded-[14px] border border-border bg-white p-4 shadow-lg"
         >
           <div className="mb-3 flex items-center justify-between">
             <span className="text-xs font-semibold text-muted">Career Dashboard</span>

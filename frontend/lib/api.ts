@@ -66,12 +66,23 @@ export const api = {
     }),
 
   startAssessment: () =>
-    request<{ welcome?: string; question: string; domain?: string }>("/api/assessment/start", {
-      method: "POST",
-    }),
+    request<{ welcome?: string; question: string; domain?: string; question_number?: number }>(
+      "/api/assessment/start",
+      { method: "POST" }
+    ),
 
   answerAssessment: (answer: string) =>
-    request<Record<string, unknown>>("/api/assessment/answer", {
+    request<{
+      done?: boolean;
+      question?: string;
+      domain?: string;
+      question_number?: number;
+      feedback?: string;
+      summary?: string;
+      skills_estimate?: Record<string, string | number>;
+      strengths?: string[];
+      weaknesses?: string[];
+    }>("/api/assessment/answer", {
       method: "POST",
       body: JSON.stringify({ answer }),
     }),

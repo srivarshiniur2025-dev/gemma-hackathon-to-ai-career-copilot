@@ -10,7 +10,7 @@ import { testimonials } from "@/lib/mock-data";
 
 export function TestimonialsSection() {
   return (
-    <section id="testimonials" className="px-6 py-24 lg:px-8">
+    <section id="testimonials" className="below-fold-section px-6 py-24 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionReveal variant="slide-up" className="text-center">
           <h2 className="font-heading text-3xl font-extrabold md:text-4xl">Loved by students</h2>

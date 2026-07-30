@@ -71,11 +71,16 @@ export default function InterviewRoomPage() {
   async function endInterview() {
     setEnding(true);
     disconnect();
+    if (sessionId.startsWith("demo-")) {
+      router.push(`/interview/${sessionId}/feedback`);
+      return;
+    }
     try {
       await api.evaluateInterviewSession(sessionId);
       router.push(`/interview/${sessionId}/feedback`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Evaluation failed");
+      router.push(`/interview/${sessionId}/feedback`);
+    } finally {
       setEnding(false);
     }
   }

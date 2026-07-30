@@ -1,24 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
-import {
-  PolarAngleAxis,
-  PolarGrid,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-} from "recharts";
 import { FadeIn } from "@/components/motion/FadeIn";
 import { GemmaBadge, GemmaBanner } from "@/components/gemma/GemmaBrand";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { ChartSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
+import { MOCK_INTERVIEW_EVALUATION } from "@/lib/mock-fallbacks";
 import type { InterviewEvaluation, InterviewSession } from "@/lib/interview-types";
+
+const InterviewRadarChart = dynamic(
+  () => import("@/components/charts/InterviewRadarChart").then((m) => m.InterviewRadarChart),
+  { loading: () => <ChartSkeleton /> }
+);
 
 function ScoreCard({ label, value }: { label: string; value: number }) {
   return (
@@ -40,6 +41,12 @@ export default function InterviewFeedbackPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (sessionId.startsWith("demo-")) {
+      setEvaluation(MOCK_INTERVIEW_EVALUATION);
+      setLoading(false);
+      return;
+    }
+
     api.getInterviewSession(sessionId).then((s) => {
       setSession(s);
       if (s.evaluation) {
@@ -56,8 +63,15 @@ export default function InterviewFeedbackPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <p className="text-muted">Gemma is analyzing your interview...</p>
+      <div className="mx-auto max-w-5xl space-y-6 py-8">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-40 w-full rounded-[24px]" />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Skeleton className="h-28 rounded-[18px]" />
+          <Skeleton className="h-28 rounded-[18px]" />
+          <Skeleton className="h-28 rounded-[18px]" />
+        </div>
+        <p className="text-center text-sm text-muted">Gemma is analyzing your interview...</p>
       </div>
     );
   }
@@ -115,13 +129,7 @@ export default function InterviewFeedbackPage() {
           <Card>
             <CardHeader><CardTitle>Performance Radar</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={260}>
-                <RadarChart data={radarData}>
-                  <PolarGrid stroke="#E4E4E7" />
-                  <PolarAngleAxis dataKey="metric" tick={{ fill: "#71717A", fontSize: 12 }} />
-                  <Radar dataKey="score" stroke="#0D9488" fill="#0D9488" fillOpacity={0.15} />
-                </RadarChart>
-              </ResponsiveContainer>
+              <InterviewRadarChart data={radarData} />
             </CardContent>
           </Card>
         </FadeIn>

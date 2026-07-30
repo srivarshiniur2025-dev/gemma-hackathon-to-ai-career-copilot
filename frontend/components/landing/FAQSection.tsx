@@ -6,7 +6,7 @@ import { faqs } from "@/lib/mock-data";
 
 export function FAQSection() {
   return (
-    <section id="faq" className="bg-background-secondary px-6 py-24 lg:px-8">
+    <section id="faq" className="below-fold-section bg-background-secondary px-6 py-24 lg:px-8">
       <div className="mx-auto max-w-2xl">
         <SectionReveal variant="mask" className="text-center">
           <h2 className="font-heading text-3xl font-extrabold">FAQ</h2>

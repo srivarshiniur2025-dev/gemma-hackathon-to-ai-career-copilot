@@ -22,7 +22,7 @@ const icons = { brain: Brain, map: Map, file: FileText, briefcase: Briefcase, mi
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="relative bg-background-secondary px-6 py-28 lg:px-8">
+    <section id="features" className="below-fold-section relative bg-background-secondary px-6 py-28 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionReveal variant="mask" className="text-center">
           <p className="text-sm font-semibold uppercase tracking-widest text-accent">Platform</p>

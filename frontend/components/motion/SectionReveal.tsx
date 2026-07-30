@@ -13,58 +13,51 @@ export type RevealVariant =
 
 const revealVariants: Record<RevealVariant, Variants> = {
   "slide-up": {
-    hidden: { opacity: 0, y: 56, scale: 0.96, rotate: 1.2 },
+    hidden: { opacity: 0, y: 40 },
     visible: {
       opacity: 1,
       y: 0,
-      scale: 1,
-      rotate: 0,
-      transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] },
-    },
-  },
-  "slide-left": {
-    hidden: { opacity: 0, x: -48, scale: 0.96, rotate: -1.5 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      scale: 1,
-      rotate: 0,
-      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-    },
-  },
-  "slide-right": {
-    hidden: { opacity: 0, x: 48, scale: 0.96, rotate: 1.5 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      scale: 1,
-      rotate: 0,
-      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-    },
-  },
-  mask: {
-    hidden: { opacity: 0, clipPath: "inset(100% 0 0 0)" },
-    visible: {
-      opacity: 1,
-      clipPath: "inset(0% 0 0 0)",
-      transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-    },
-  },
-  scale: {
-    hidden: { opacity: 0, scale: 0.96 },
-    visible: {
-      opacity: 1,
-      scale: 1,
       transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
     },
   },
-  "rotate-in": {
-    hidden: { opacity: 0, scale: 0.96, rotate: 2 },
+  "slide-left": {
+    hidden: { opacity: 0, x: -32 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  "slide-right": {
+    hidden: { opacity: 0, x: 32 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  mask: {
+    hidden: { opacity: 0, y: 24 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  scale: {
+    hidden: { opacity: 0, scale: 0.98 },
     visible: {
       opacity: 1,
       scale: 1,
-      rotate: 0,
-      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+      transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+    },
+  },
+  "rotate-in": {
+    hidden: { opacity: 0, y: 16 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
     },
   },
 };

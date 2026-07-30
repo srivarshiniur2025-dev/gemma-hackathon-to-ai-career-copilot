@@ -11,7 +11,7 @@ import { steps } from "@/lib/mock-data";
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="px-6 py-24 lg:px-8">
+    <section id="how-it-works" className="below-fold-section px-6 py-24 lg:px-8">
       <div className="mx-auto max-w-3xl">
         <SectionReveal variant="slide-up" className="text-center">
           <h2 className="font-heading text-3xl font-extrabold md:text-4xl">How it works</h2>
