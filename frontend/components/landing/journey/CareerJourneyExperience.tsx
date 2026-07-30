@@ -3,16 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import dynamic from "next/dynamic";
 import { useReducedMotion } from "framer-motion";
 import { PremiumHero } from "@/components/landing/premium/PremiumHero";
-import { AssessmentSection } from "@/components/landing/sections/AssessmentSection";
-import { RoadmapSection } from "@/components/landing/sections/RoadmapSection";
-import { ProjectsSection } from "@/components/landing/sections/ProjectsSection";
-import { ResumeSection } from "@/components/landing/sections/ResumeSection";
-import { InterviewSection } from "@/components/landing/sections/InterviewSection";
-import { InternshipSection } from "@/components/landing/sections/InternshipSection";
-import { DashboardSection } from "@/components/landing/sections/DashboardSection";
-import { SuccessSection } from "@/components/landing/sections/SuccessSection";
 import {
   JOURNEY_ANCHORS,
   JOURNEY_MILESTONES,
@@ -21,6 +14,11 @@ import {
 } from "@/lib/journey-milestones";
 
 gsap.registerPlugin(ScrollTrigger);
+
+const JourneySections = dynamic(
+  () => import("@/components/landing/journey/JourneySections").then((m) => m.JourneySections),
+  { ssr: false }
+);
 
 type PinState = { x: number; y: number; angle: number };
 
@@ -38,12 +36,6 @@ function ScrollNavigator({ rotation }: { rotation: number }) {
       </svg>
     </div>
   );
-}
-
-function getMilestone(id: string) {
-  const m = JOURNEY_MILESTONES.find((x) => x.id === id);
-  if (!m) throw new Error(`Missing milestone: ${id}`);
-  return m;
 }
 
 export function CareerJourneyExperience() {
@@ -96,7 +88,6 @@ export function CareerJourneyExperience() {
       <PremiumHero />
 
       <div ref={journeyRef} className="relative">
-        {/* Continuous scroll route — below hero only */}
         <div className="pointer-events-none absolute inset-0 z-[1] hidden lg:block" aria-hidden>
           <div className="absolute inset-y-0 right-0 w-[52%]">
             <svg
@@ -144,16 +135,7 @@ export function CareerJourneyExperience() {
           </div>
         </div>
 
-        <div className="relative z-10">
-          <AssessmentSection milestone={getMilestone("assessment")} />
-          <RoadmapSection milestone={getMilestone("skills")} />
-          <ProjectsSection milestone={getMilestone("projects")} />
-          <ResumeSection milestone={getMilestone("resume")} />
-          <InterviewSection milestone={getMilestone("interview")} />
-          <InternshipSection milestone={getMilestone("internship")} />
-          <DashboardSection milestone={getMilestone("dashboard")} />
-          <SuccessSection milestone={getMilestone("success")} />
-        </div>
+        <JourneySections />
       </div>
     </div>
   );

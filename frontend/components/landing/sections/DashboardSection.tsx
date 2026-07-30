@@ -1,20 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  ResponsiveContainer,
-} from "recharts";
 import { useReducedMotion } from "framer-motion";
 import { SectionLayout } from "@/components/landing/sections/shared/SectionLayout";
 import { TechnicalGridBg } from "@/components/landing/sections/shared/SectionBackgrounds";
 import { DASHBOARD_METRICS } from "@/lib/section-content";
 import type { JourneyMilestone } from "@/lib/journey-milestones";
+
+const DashboardRadar = dynamic(
+  () => import("@/components/landing/sections/DashboardRadar").then((m) => m.DashboardRadar),
+  { ssr: false, loading: () => <div className="h-[140px] w-[160px] animate-pulse rounded-lg bg-[#F4F4F5]" /> }
+);
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -146,22 +145,7 @@ export function DashboardSection({ milestone }: { milestone: JourneyMilestone })
 
         <div className="mt-5 flex items-center justify-around">
           <CircularProgress value={readiness} label="Readiness" />
-          <div className="h-[140px] w-[160px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-                <PolarGrid stroke="#E4E4E7" />
-                <PolarAngleAxis dataKey="skill" tick={{ fontSize: 9, fill: "#A1A1AA" }} />
-                <Radar
-                  dataKey="value"
-                  stroke="#0D9488"
-                  fill="#0D9488"
-                  fillOpacity={0.2}
-                  strokeWidth={1.5}
-                  isAnimationActive={!reduceMotion}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
+          <DashboardRadar data={radarData} />
         </div>
 
         <div className="mt-5">

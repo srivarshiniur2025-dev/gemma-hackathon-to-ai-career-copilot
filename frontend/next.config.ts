@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname),
   },
   experimental: {
-    optimizePackageImports: ["lucide-react", "recharts", "framer-motion"],
+    optimizePackageImports: ["lucide-react", "recharts", "framer-motion", "gsap"],
   },
   async rewrites() {
     return [

@@ -7,13 +7,19 @@ import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+
+const BackendStatus = dynamic(() => import("@/components/BackendStatus"), {
+  ssr: false,
+  loading: () => null,
+});
 
 const links = [
-  { href: "#features", label: "Features" },
-  { href: "#how-it-works", label: "How It Works" },
-  { href: "#why-gemma", label: "Why Gemma" },
-  { href: "#testimonials", label: "Testimonials" },
-  { href: "#faq", label: "FAQ" },
+  { href: "#journey-assessment", label: "Assessment" },
+  { href: "#journey-skills", label: "Roadmap" },
+  { href: "#journey-projects", label: "Projects" },
+  { href: "#journey-interview", label: "Interview" },
+  { href: "#journey-dashboard", label: "Dashboard" },
 ];
 
 export function Navbar() {
@@ -60,6 +66,7 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          <BackendStatus />
           <Link href="/login">
             <Button variant="ghost" size="sm">
               Login

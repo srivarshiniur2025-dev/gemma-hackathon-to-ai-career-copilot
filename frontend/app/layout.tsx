@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Sora } from "next/font/google";
 import { AuthSync } from "@/components/AuthSync";
+import { BackendHealthPrefetch } from "@/components/BackendHealthPrefetch";
 import { LenisProvider } from "@/components/motion/LenisProvider";
 import { ToastProvider } from "@/components/ui/toast";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <ToastProvider>
             <AuthSync />
+            <BackendHealthPrefetch />
             <LenisProvider>{children}</LenisProvider>
           </ToastProvider>
         </AuthProvider>

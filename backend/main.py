@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,12 +17,15 @@ API_PREFIX = "/api"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_firebase()
-    db = get_db()
-    await db.users.create_index("uid", unique=True)
-    await db.interview_sessions.create_index("session_id", unique=True)
-    await db.interview_sessions.create_index("uid")
-    await db.internship_search_cache.create_index("cache_key", unique=True)
-    await db.internship_search_cache.create_index("cached_at")
+    try:
+        db = get_db()
+        await db.users.create_index("uid", unique=True)
+        await db.interview_sessions.create_index("session_id", unique=True)
+        await db.interview_sessions.create_index("uid")
+        await db.internship_search_cache.create_index("cache_key", unique=True)
+        await db.internship_search_cache.create_index("cached_at")
+    except Exception as exc:
+        logging.warning("MongoDB unavailable at startup — API will run in degraded mode: %s", exc)
     yield
     await close_db()
 
