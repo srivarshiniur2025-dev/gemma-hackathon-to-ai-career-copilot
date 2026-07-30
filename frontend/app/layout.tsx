@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
 import { Inter, Sora } from "next/font/google";
 import { AuthSync } from "@/components/AuthSync";
-import { ToastProvider } from "@/components/ui/toast";
 import { LenisProvider } from "@/components/motion/LenisProvider";
+import { ToastProvider } from "@/components/ui/toast";
 import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
 });
 
 const sora = Sora({
   subsets: ["latin"],
   variable: "--font-sora",
   weight: ["600", "700", "800"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {

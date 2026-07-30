@@ -73,9 +73,57 @@ GOOGLE_API_KEY=your_google_api_key_here
 
 ## Deploy
 
-- Frontend: Vercel (`frontend/`)
-- Backend: Render or Railway (run uvicorn command)
-- Set `BACKEND_URL` to your backend URL in Vercel (server-side only — do not expose `GOOGLE_API_KEY` to the client)
+### Full-stack on Vercel (recommended)
+
+Root `vercel.json` uses Vercel **Services** (Next.js + FastAPI). Root `pyproject.toml` sets `entrypoint = "backend.main:app"` so Vercel finds the FastAPI app.
+
+1. Import the GitHub repo in [Vercel](https://vercel.com/new).
+2. **Root Directory:** leave as repository root (`.`).
+3. **Framework Preset:** should detect **Services** from `vercel.json`.
+4. Add environment variables for the **backend** service (Project → Settings → Environment Variables):
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GOOGLE_API_KEY` | Yes | Gemma / Google AI — backend only, never on frontend |
+| `MONGODB_URI` | Yes | e.g. MongoDB Atlas connection string |
+| `MONGODB_DB` | No | Default: `career_copilot` |
+| `FIREBASE_PROJECT_ID` | Yes | Firebase Auth |
+| `CORS_ORIGINS` | No | Your Vercel URL, e.g. `https://your-app.vercel.app` |
+
+5. Deploy. Routing:
+   - `/api/*` → FastAPI backend
+   - `/ws/*` → FastAPI WebSocket (mock interview)
+   - all other paths → Next.js frontend
+
+`BACKEND_URL` is injected for SSR via service binding. `NEXT_PUBLIC_WS_URL` is optional — omit it to use same-origin `wss://` in production.
+
+**Note:** WebSockets and MongoDB on serverless have cold-start and duration limits; use MongoDB Atlas.
+
+### Split deploy (alternative)
+
+#### Frontend (Vercel)
+
+1. Set **Root Directory** to `frontend`.
+2. Set environment variables:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `BACKEND_URL` | Yes (for live API) | FastAPI backend URL — server-side only, used by Next.js rewrites |
+| `NEXT_PUBLIC_WS_URL` | Yes (for live interviews) | WebSocket URL, e.g. `wss://your-app.railway.app` |
+
+**Do not** set `GOOGLE_API_KEY` on Vercel frontend — Gemma calls run on the backend only.
+
+Without `BACKEND_URL`, the app runs in **demo mode** with mock data for assessment, internships, and interviews.
+
+#### Backend (Railway / Render)
+
+Deploy the FastAPI backend separately:
+
+```bash
+uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+```
+
+Set `GOOGLE_API_KEY` and `MONGODB_URI` on the backend host only.
 
 ## Contributors
 

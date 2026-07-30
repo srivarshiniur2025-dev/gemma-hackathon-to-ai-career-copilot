@@ -2,11 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { InterviewSession, QuestionType, WsClientMessage, WsServerMessage } from "@/lib/interview-types";
+import { DEMO_INTERVIEW_QUESTIONS } from "@/lib/mock-fallbacks";
 import { api } from "@/lib/api";
+
+function isDemoSession(sessionId: string) {
+  return sessionId.startsWith("demo-");
+}
 
 function getWsBase(): string {
   if (typeof window === "undefined") return "ws://127.0.0.1:8000";
-  return process.env.NEXT_PUBLIC_WS_URL ?? "ws://127.0.0.1:8000";
+  if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL;
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${protocol}//${window.location.host}`;
 }
 
 type ChatMessage = {
@@ -33,6 +40,7 @@ export function useInterviewWebSocket(sessionId: string, token: string | null) {
   const [answerHints, setAnswerHints] = useState<string[]>([]);
   const [completed, setCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const demoQuestionIndex = useRef(0);
 
   const appendMessage = useCallback((msg: ChatMessage) => {
     setMessages((prev) => [...prev, msg]);
@@ -87,6 +95,7 @@ export function useInterviewWebSocket(sessionId: string, token: string | null) {
   }, [appendMessage]);
 
   const connect = useCallback(() => {
+    if (isDemoSession(sessionId)) return;
     if (!token || !sessionId) return;
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
@@ -141,16 +150,68 @@ export function useInterviewWebSocket(sessionId: string, token: string | null) {
   }, []);
 
   const sendAnswer = useCallback((content: string) => {
+    if (isDemoSession(sessionId)) {
+      appendMessage({ id: crypto.randomUUID(), role: "user", content });
+      const nextIndex = demoQuestionIndex.current + 1;
+      if (nextIndex >= DEMO_INTERVIEW_QUESTIONS.length) {
+        setCompleted(true);
+        appendMessage({
+          id: crypto.randomUUID(),
+          role: "system",
+          content: "Demo interview complete. View your feedback report.",
+        });
+        return;
+      }
+      demoQuestionIndex.current = nextIndex;
+      const nextQuestion = DEMO_INTERVIEW_QUESTIONS[nextIndex];
+      setQuestionNumber(nextIndex + 1);
+      setCurrentQuestion(nextQuestion);
+      appendMessage({
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: nextQuestion,
+        stage: currentStage,
+      });
+      return;
+    }
+
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       setError("Not connected to interview server");
       return;
     }
     appendMessage({ id: crypto.randomUUID(), role: "user", content });
     wsRef.current.send(JSON.stringify({ type: "answer", content } satisfies WsClientMessage));
-  }, [appendMessage]);
+  }, [appendMessage, currentStage, sessionId]);
 
   useEffect(() => {
-    if (!sessionId || !token) return;
+    if (!sessionId) return;
+
+    if (isDemoSession(sessionId)) {
+      setConnecting(false);
+      setConnected(true);
+      setTotalQuestions(DEMO_INTERVIEW_QUESTIONS.length);
+      setQuestionNumber(1);
+      demoQuestionIndex.current = 0;
+      const firstQuestion = DEMO_INTERVIEW_QUESTIONS[0];
+      setCurrentQuestion(firstQuestion);
+      setMessages([
+        {
+          id: crypto.randomUUID(),
+          role: "system",
+          content: "Demo mode — backend unavailable. Practice with sample Gemma 4 interview questions.",
+        },
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: firstQuestion,
+          stage: "fundamentals",
+          question_type: "introductory",
+        },
+      ]);
+      return;
+    }
+
+    if (!token) return;
     api.getInterviewSession(sessionId).then((session: InterviewSession) => {
       if (session.total_questions) setTotalQuestions(session.total_questions);
       if (session.status === "completed") setCompleted(true);
@@ -180,9 +241,10 @@ export function useInterviewWebSocket(sessionId: string, token: string | null) {
   }, [sessionId, token]);
 
   useEffect(() => {
+    if (isDemoSession(sessionId)) return;
     connect();
     return () => disconnect();
-  }, [connect, disconnect]);
+  }, [connect, disconnect, sessionId]);
 
   return {
     connected,
