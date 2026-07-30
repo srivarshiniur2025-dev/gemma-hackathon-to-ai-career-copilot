@@ -1,11 +1,21 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Award, Flame, TrendingUp } from "lucide-react";
 import { FadeIn } from "@/components/motion/FadeIn";
-import { WeeklyGrowthChart, SkillRadarChart } from "@/components/charts/DashboardCharts";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
+import { NAVIGATOR_INDEX_LABEL } from "@/lib/gemma";
+
+const SkillRadarChart = dynamic(
+  () => import("@/components/charts/DashboardCharts").then((m) => m.SkillRadarChart),
+  { ssr: false, loading: () => <div className="h-[280px] animate-pulse rounded-lg bg-[#F4F4F5]" /> }
+);
+const WeeklyGrowthChart = dynamic(
+  () => import("@/components/charts/DashboardCharts").then((m) => m.WeeklyGrowthChart),
+  { ssr: false, loading: () => <div className="h-[280px] animate-pulse rounded-lg bg-[#F4F4F5]" /> }
+);
 
 export default function ProgressPage() {
   const { career, skillScore } = useCareerProfile();
@@ -57,7 +67,7 @@ export default function ProgressPage() {
       <div className="grid gap-4 sm:grid-cols-4">
         {[
           { label: "Learning Hours", value: `${totalHours}h` },
-          { label: "Skill Score", value: `${skillScore}%` },
+          { label: NAVIGATOR_INDEX_LABEL, value: `${skillScore}%` },
           { label: "Day Streak", value: `${career.streak.count}` },
           {
             label: "Interview Avg",

@@ -1,13 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Logo } from "@/components/brand/Logo";
-import { MetricCardsGrid } from "@/components/dashboard/MetricCards";
-import { ProductivityChart } from "@/components/dashboard/ProductivityChart";
 import { SkillsInsightsPanel } from "@/components/dashboard/SkillsInsightsPanel";
 import { StatisticsGrid } from "@/components/dashboard/StatisticsGrid";
 import { StreakCard } from "@/components/dashboard/StreakCard";
+
+const MetricCardsGrid = dynamic(
+  () => import("@/components/dashboard/MetricCards").then((m) => m.MetricCardsGrid),
+  { ssr: false, loading: () => <div className="grid h-48 grid-cols-2 gap-3 animate-pulse rounded-[22px] bg-[#F4F4F5]" /> }
+);
+const ProductivityChart = dynamic(
+  () => import("@/components/dashboard/ProductivityChart").then((m) => m.ProductivityChart),
+  { ssr: false, loading: () => <div className="mt-6 h-36 animate-pulse rounded-[18px] bg-[#F4F4F5]" /> }
+);
 
 export function DashboardAnalyticsPanel() {
   return (

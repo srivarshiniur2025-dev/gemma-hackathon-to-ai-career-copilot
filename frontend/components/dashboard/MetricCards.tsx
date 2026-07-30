@@ -1,16 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
-import {
-  Area,
-  AreaChart,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-} from "recharts";
 import { CountUp } from "@/components/dashboard/CountUp";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
+import { NAVIGATOR_INDEX_LABEL } from "@/lib/gemma";
 import { cn } from "@/lib/utils";
+
+const SparklineChart = dynamic(
+  () => import("@/components/charts/MetricCardCharts").then((m) => m.SparklineChart),
+  { ssr: false, loading: () => <div className="h-full w-full" /> }
+);
+const RoadmapAreaChart = dynamic(
+  () => import("@/components/charts/MetricCardCharts").then((m) => m.RoadmapAreaChart),
+  { ssr: false, loading: () => <div className="h-full w-full" /> }
+);
 
 const cardMotion = {
   initial: { opacity: 0, y: 24 },
@@ -84,23 +88,12 @@ export function MetricCardsGrid() {
         delay={0.05}
         className="bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] text-white"
       >
-        <p className="text-xs font-medium text-white/80">Skill Score</p>
+        <p className="text-xs font-medium text-white/80">{NAVIGATOR_INDEX_LABEL}</p>
         <p className="mt-1 text-3xl font-extrabold tracking-tight">
           <CountUp value={skillScore} suffix="%" />
         </p>
         <div className="mt-3 h-10 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={skillSparkline}>
-              <Line
-                type="monotone"
-                dataKey="v"
-                stroke="rgba(255,255,255,0.9)"
-                strokeWidth={2}
-                dot={false}
-                animationDuration={1200}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <SparklineChart data={skillSparkline} />
         </div>
       </MetricCardShell>
 
@@ -133,18 +126,7 @@ export function MetricCardsGrid() {
         </p>
         <p className="text-xs text-white/70">Remaining</p>
         <div className="mt-2 h-10 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={roadmapCurve}>
-              <Area
-                type="monotone"
-                dataKey="progress"
-                stroke="rgba(255,255,255,0.9)"
-                fill="rgba(255,255,255,0.15)"
-                strokeWidth={2}
-                animationDuration={1200}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <RoadmapAreaChart data={roadmapCurve} />
         </div>
       </MetricCardShell>
 

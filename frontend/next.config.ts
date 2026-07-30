@@ -5,11 +5,20 @@ const backendUrl = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
 
 const nextConfig: NextConfig = {
   compress: true,
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60,
+  },
   turbopack: {
     root: path.join(__dirname),
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "framer-motion", "gsap"],
+  },
+  modularizeImports: {
+    "lucide-react": {
+      transform: "lucide-react/dist/esm/icons/{{kebabCase member}}",
+    },
   },
   async rewrites() {
     return [

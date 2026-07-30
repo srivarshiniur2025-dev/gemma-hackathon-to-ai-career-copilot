@@ -1,8 +1,13 @@
 "use client";
 
-import { Bar, BarChart, ResponsiveContainer } from "recharts";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
+
+const ProductivityBarChart = dynamic(
+  () => import("@/components/charts/ProductivityBarChart").then((m) => m.ProductivityBarChart),
+  { ssr: false, loading: () => <div className="h-full w-full animate-pulse rounded bg-[#F4F4F5]" /> }
+);
 
 export function ProductivityChart() {
   const { career } = useCareerProfile();
@@ -16,11 +21,7 @@ export function ProductivityChart() {
     >
       <p className="mb-3 text-xs font-semibold text-foreground-heading">Weekly productivity</p>
       <div className="h-24 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={career.weeklyActivity}>
-            <Bar dataKey="hours" fill="#0D9488" radius={[6, 6, 0, 0]} animationDuration={900} />
-          </BarChart>
-        </ResponsiveContainer>
+        <ProductivityBarChart data={career.weeklyActivity} />
       </div>
     </motion.div>
   );

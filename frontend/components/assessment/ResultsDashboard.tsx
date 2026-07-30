@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -12,13 +13,20 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { GemmaBadge, GemmaModelTag } from "@/components/gemma/GemmaBrand";
-import { SkillRadarChart } from "@/components/charts/DashboardCharts";
-import { ProgressBarChart } from "@/components/charts/DashboardCharts";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import type { AssessmentResults } from "@/lib/assessment-types";
+
+const SkillRadarChart = dynamic(
+  () => import("@/components/charts/DashboardCharts").then((m) => m.SkillRadarChart),
+  { ssr: false, loading: () => <div className="h-[280px] animate-pulse rounded-lg bg-[#F4F4F5]" /> }
+);
+const ProgressBarChart = dynamic(
+  () => import("@/components/charts/DashboardCharts").then((m) => m.ProgressBarChart),
+  { ssr: false, loading: () => <div className="h-[280px] animate-pulse rounded-lg bg-[#F4F4F5]" /> }
+);
 
 interface ResultsDashboardProps {
   results: AssessmentResults;
