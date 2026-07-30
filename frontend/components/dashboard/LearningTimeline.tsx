@@ -2,7 +2,10 @@
 
 import { MoreHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
-import { timelineHours, weeklyTimelineEvents } from "@/lib/dashboard-data";
+import Link from "next/link";
+import { useCareerProfile } from "@/contexts/CareerProfileContext";
+import { timelineHours } from "@/lib/dashboard-data";
+import type { TimelineEvent } from "@/lib/dashboard-data";
 
 function formatHour(hour: number) {
   if (hour === 0) return "12 AM";
@@ -11,13 +14,7 @@ function formatHour(hour: number) {
   return `${hour - 12} PM`;
 }
 
-function TimelineEventCard({
-  event,
-  index,
-}: {
-  event: (typeof weeklyTimelineEvents)[number];
-  index: number;
-}) {
+function TimelineEventCard({ event, index }: { event: TimelineEvent; index: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: 12 }}
@@ -51,9 +48,8 @@ function TimelineEventCard({
 }
 
 export function LearningTimeline() {
-  const eventsByHour = new Map(
-    weeklyTimelineEvents.map((e) => [e.startHour, e])
-  );
+  const { career } = useCareerProfile();
+  const eventsByHour = new Map(career.plannerEvents.map((e) => [e.startHour, e]));
 
   return (
     <motion.section
@@ -62,9 +58,15 @@ export function LearningTimeline() {
       transition={{ duration: 0.5, delay: 0.2 }}
       className="flex-1 overflow-y-auto px-4 pb-6 sm:px-6"
     >
-      <h2 className="mb-5 text-lg font-bold text-foreground-heading">
-        This Week&apos;s Career Plan
-      </h2>
+      <div className="mb-5 flex items-center justify-between gap-2">
+        <h2 className="text-lg font-bold text-foreground-heading">This Week&apos;s Career Plan</h2>
+        <Link
+          href="/planner"
+          className="text-xs font-medium text-accent hover:underline"
+        >
+          Edit planner →
+        </Link>
+      </div>
 
       <div className="space-y-1">
         {timelineHours.map((hour, rowIndex) => {

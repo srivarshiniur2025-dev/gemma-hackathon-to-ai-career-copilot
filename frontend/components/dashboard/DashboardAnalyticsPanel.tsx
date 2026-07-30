@@ -4,7 +4,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Logo } from "@/components/brand/Logo";
 import { MetricCardsGrid } from "@/components/dashboard/MetricCards";
+import { ProductivityChart } from "@/components/dashboard/ProductivityChart";
+import { SkillsInsightsPanel } from "@/components/dashboard/SkillsInsightsPanel";
 import { StatisticsGrid } from "@/components/dashboard/StatisticsGrid";
+import { StreakCard } from "@/components/dashboard/StreakCard";
 
 export function DashboardAnalyticsPanel() {
   return (
@@ -20,6 +23,9 @@ export function DashboardAnalyticsPanel() {
 
       <MetricCardsGrid />
       <StatisticsGrid />
+      <StreakCard />
+      <SkillsInsightsPanel />
+      <ProductivityChart />
     </motion.aside>
   );
 }

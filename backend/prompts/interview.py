@@ -11,6 +11,7 @@ Interview context so far:
 {conversation_history}
 
 Candidate's resume summary: {resume_summary}
+Job description (tailor questions to this posting): {job_description}
 Skills to probe: {target_skills}
 Question number: {question_number} of {total_questions}
 Current interview stage: {stage}
@@ -104,6 +105,7 @@ def simulation_question_prompt(
     company_context: str,
     conversation_history: str,
     resume_summary: str,
+    job_description: str,
     target_skills: str,
     question_number: int,
     total_questions: int,
@@ -114,6 +116,7 @@ def simulation_question_prompt(
         company_context=company_context,
         conversation_history=conversation_history,
         resume_summary=resume_summary,
+        job_description=job_description or "Not provided — use role title and skills.",
         target_skills=target_skills,
         question_number=question_number,
         total_questions=total_questions,

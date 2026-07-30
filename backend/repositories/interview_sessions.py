@@ -31,6 +31,7 @@ async def create_session(
     company_context: str = "",
     resume_summary: str = "",
     target_skills: list[str] | None = None,
+    job_description: str = "",
 ) -> dict:
     db = get_db()
     session_id = str(uuid.uuid4())
@@ -42,6 +43,7 @@ async def create_session(
         "company_context": company_context,
         "resume_summary": resume_summary,
         "target_skills": target_skills or [],
+        "job_description": job_description,
         "total_questions": _total_questions(focus),
         "status": "active",
         "current_stage": _initial_stage(focus),

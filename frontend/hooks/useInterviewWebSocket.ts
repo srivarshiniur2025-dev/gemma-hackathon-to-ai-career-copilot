@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { InterviewSession, QuestionType, WsClientMessage, WsServerMessage } from "@/lib/interview-types";
-import { DEMO_INTERVIEW_QUESTIONS } from "@/lib/mock-fallbacks";
+import { loadDemoInterviewConfig } from "@/lib/mock-fallbacks";
 import { api } from "@/lib/api";
 
 function isDemoSession(sessionId: string) {
@@ -151,19 +151,21 @@ export function useInterviewWebSocket(sessionId: string, token: string | null) {
 
   const sendAnswer = useCallback((content: string) => {
     if (isDemoSession(sessionId)) {
+      const config = loadDemoInterviewConfig(sessionId);
+      const demoQuestions = config?.questions ?? [];
       appendMessage({ id: crypto.randomUUID(), role: "user", content });
       const nextIndex = demoQuestionIndex.current + 1;
-      if (nextIndex >= DEMO_INTERVIEW_QUESTIONS.length) {
+      if (nextIndex >= demoQuestions.length) {
         setCompleted(true);
         appendMessage({
           id: crypto.randomUUID(),
           role: "system",
-          content: "Demo interview complete. View your feedback report.",
+          content: "Interview complete. View your Gemma feedback report.",
         });
         return;
       }
       demoQuestionIndex.current = nextIndex;
-      const nextQuestion = DEMO_INTERVIEW_QUESTIONS[nextIndex];
+      const nextQuestion = demoQuestions[nextIndex];
       setQuestionNumber(nextIndex + 1);
       setCurrentQuestion(nextQuestion);
       appendMessage({
@@ -189,16 +191,19 @@ export function useInterviewWebSocket(sessionId: string, token: string | null) {
     if (isDemoSession(sessionId)) {
       setConnecting(false);
       setConnected(true);
-      setTotalQuestions(DEMO_INTERVIEW_QUESTIONS.length);
+      const config = loadDemoInterviewConfig(sessionId);
+      const demoQuestions = config?.questions ?? [];
+      setTotalQuestions(demoQuestions.length);
       setQuestionNumber(1);
       demoQuestionIndex.current = 0;
-      const firstQuestion = DEMO_INTERVIEW_QUESTIONS[0];
+      const firstQuestion = demoQuestions[0] ?? "Tell me about yourself and why you want this role.";
       setCurrentQuestion(firstQuestion);
+      const roleLabel = config?.targetRole ?? "your target role";
       setMessages([
         {
           id: crypto.randomUUID(),
           role: "system",
-          content: "Demo mode — backend unavailable. Practice with sample Gemma 4 interview questions.",
+          content: `Gemma mock interview for **${roleLabel}** — tailored questions based on your role${config?.jobDescription ? " and job description" : ""}.`,
         },
         {
           id: crypto.randomUUID(),

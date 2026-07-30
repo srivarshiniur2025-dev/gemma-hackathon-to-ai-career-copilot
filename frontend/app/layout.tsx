@@ -24,8 +24,8 @@ export const metadata: Metadata = {
   description:
     "Premium AI career mentor powered by Gemma 4 (gemma-4-26b-a4b-it) — adaptive assessments, roadmaps, resumes, and interviews.",
   icons: {
-    icon: "/logo.svg",
-    apple: "/logo.svg",
+    icon: "/logo-career-copilot.png",
+    apple: "/logo-career-copilot.png",
   },
 };
 

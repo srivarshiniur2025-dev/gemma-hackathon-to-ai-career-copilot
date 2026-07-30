@@ -19,7 +19,6 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
         <DashboardIconSidebar
           mobileOpen={mobileNavOpen}
           onMobileClose={closeMobileNav}
-          onMobileOpen={openMobileNav}
         />
       )}
 

@@ -18,8 +18,18 @@ class CreateSessionRequest(BaseModel):
     target_role: str = Field(..., examples=["SDE Intern"])
     focus: str = Field(..., pattern="^(fundamentals|system_design|behavioral|full_pipeline)$")
     company_context: str = Field(default="", examples=["a fast-growing fintech startup"])
+    job_description: str = Field(default="", examples=["We are hiring a Python intern to build APIs..."])
     resume_summary: str = Field(default="")
     target_skills: list[str] = Field(default_factory=list)
+
+
+class GenerateQuestionsRequest(BaseModel):
+    target_role: str
+    focus: str = Field(..., pattern="^(fundamentals|system_design|behavioral|full_pipeline)$")
+    company_context: str = ""
+    job_description: str = ""
+    resume_summary: str = ""
+    count: int = Field(default=5, ge=3, le=8)
 
 
 def _gemma_http_error(exc: Exception) -> HTTPException:
@@ -68,8 +78,34 @@ async def create_session(
         company_context=company_context,
         resume_summary=resume_summary,
         target_skills=target_skills,
+        job_description=payload.job_description,
     )
     return session
+
+
+@router.post("/generate-questions")
+async def generate_questions(
+    payload: GenerateQuestionsRequest,
+    user: Annotated[dict, Depends(get_current_user)],
+):
+    resume_summary = payload.resume_summary
+    if not resume_summary:
+        resume_summary, _, _ = await sim.profile_context_for_uid(user["uid"])
+    try:
+        from backend.services.interview_questions import generate_questions_for_job
+
+        count = 6 if payload.focus == "full_pipeline" else payload.count
+        questions = generate_questions_for_job(
+            target_role=payload.target_role,
+            focus=payload.focus,
+            company_context=payload.company_context,
+            job_description=payload.job_description,
+            resume_summary=resume_summary,
+            count=count,
+        )
+        return {"questions": questions, "source": "gemma"}
+    except (GemmaRateLimitError, GemmaAuthError, GemmaNetworkError) as exc:
+        raise _gemma_http_error(exc) from exc
 
 
 @router.get("/sessions/{session_id}")

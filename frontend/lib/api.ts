@@ -130,6 +130,7 @@ export const api = {
     focus: InterviewFocus,
     options?: {
       companyContext?: string;
+      jobDescription?: string;
       resumeSummary?: string;
       targetSkills?: string[];
     }
@@ -140,8 +141,29 @@ export const api = {
         target_role: targetRole,
         focus,
         company_context: options?.companyContext ?? "",
+        job_description: options?.jobDescription ?? "",
         resume_summary: options?.resumeSummary ?? "",
         target_skills: options?.targetSkills ?? [],
+      }),
+    }),
+
+  generateInterviewQuestions: (body: {
+    targetRole: string;
+    focus: InterviewFocus;
+    companyContext?: string;
+    jobDescription?: string;
+    resumeSummary?: string;
+    count?: number;
+  }) =>
+    request<{ questions: string[]; source: string }>("/api/interview/generate-questions", {
+      method: "POST",
+      body: JSON.stringify({
+        target_role: body.targetRole,
+        focus: body.focus,
+        company_context: body.companyContext ?? "",
+        job_description: body.jobDescription ?? "",
+        resume_summary: body.resumeSummary ?? "",
+        count: body.count ?? 5,
       }),
     }),
 

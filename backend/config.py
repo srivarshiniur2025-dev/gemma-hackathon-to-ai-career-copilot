@@ -22,13 +22,14 @@ class Settings(BaseSettings):
     gemma_model: str = "gemma-4-27b-it"
     gemma_fallback_models: str = "gemma-4-26b-a4b-it,gemma-4-4b-it"
 
-    # Adzuna job search (free tier at https://developer.adzuna.com)
+    # Job search — multiple sources aggregated in job_fetcher.py (parallel, deduped).
+    # SerpAPI Google Jobs = widest web coverage (LinkedIn, Indeed, Glassdoor, etc.)
+    serpapi_key: str = ""
+
+    # Adzuna (free tier at https://developer.adzuna.com)
     adzuna_app_id: str = ""
     adzuna_app_key: str = ""
     adzuna_country: str = "us"
-
-    # SerpAPI Google Jobs (https://serpapi.com) — used if Adzuna keys are absent
-    serpapi_key: str = ""
 
     @property
     def resolved_google_api_key(self) -> str:

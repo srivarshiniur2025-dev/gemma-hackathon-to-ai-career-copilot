@@ -22,6 +22,10 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
         touchMultiplier: 1.2,
       });
 
+      lenis.on("scroll", () => {
+        void import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => ScrollTrigger.update());
+      });
+
       function raf(time: number) {
         if (isVisible && lenis) lenis.raf(time);
         rafId = requestAnimationFrame(raf);

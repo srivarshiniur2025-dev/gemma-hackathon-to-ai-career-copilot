@@ -56,8 +56,8 @@ async def recommend_internships(uid: str) -> dict:
         return {
             "recommendations": [],
             "overall_advice": (
-                "No live internships found for your profile. Try broadening your target role "
-                "or add Adzuna / SerpAPI keys for wider coverage."
+                "No live internships found for your profile. Try broadening your target role. "
+                "Add SERPAPI_KEY for Google Jobs (LinkedIn, Indeed, etc.) or Adzuna keys in .env."
             ),
             "source": None,
             "cached": False,

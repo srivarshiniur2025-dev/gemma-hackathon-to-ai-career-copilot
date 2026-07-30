@@ -13,6 +13,7 @@ from google.genai import errors as genai_errors
 from google.genai import types
 
 from backend.config import settings
+from backend.services.internship_spam_check import extract_contact_email
 from backend.prompts import assessment as assessment_prompts
 from backend.prompts import chat as chat_prompts
 from backend.prompts import internships as internships_prompts
@@ -129,32 +130,46 @@ class GemmaService:
             f"Last error: {last_error}"
         ) from last_error
 
-    def generate_text(
-        self,
-        system: str,
-        user: str,
-        *,
-        temperature: float = 0.7,
-    ) -> str:
-        def _run(model: str) -> str:
-            response = self.client.models.generate_content(
-                model=model,
-                contents=user,
-                config=self._build_config(system, temperature),
-            )
-            return (response.text or "").strip()
-
-        return self._with_model_fallback("generate_text", _run)
-
     def generate_json(
         self,
         system: str,
         user: str,
         *,
         temperature: float = 0.7,
+        use_google_search: bool = False,
     ) -> dict:
-        raw = self.generate_text(system + JSON_SUFFIX, user, temperature=temperature)
+        raw = self.generate_text(
+            system + JSON_SUFFIX,
+            user,
+            temperature=temperature,
+            use_google_search=use_google_search,
+        )
         return parse_json(raw)
+
+    def generate_text(
+        self,
+        system: str,
+        user: str,
+        *,
+        temperature: float = 0.7,
+        use_google_search: bool = False,
+    ) -> str:
+        def _run(model: str) -> str:
+            config_kwargs: dict[str, Any] = {
+                "temperature": temperature,
+                "system_instruction": system,
+            }
+            if use_google_search:
+                config_kwargs["tools"] = [types.Tool(google_search=types.GoogleSearch())]
+
+            response = self.client.models.generate_content(
+                model=model,
+                contents=user,
+                config=types.GenerateContentConfig(**config_kwargs),
+            )
+            return (response.text or "").strip()
+
+        return self._with_model_fallback("generate_text", _run)
 
     def stream_text(
         self,
@@ -278,6 +293,41 @@ def explain_verified_internship_matches(
     return gemma_service.generate_json(internships_prompts.MATCH_SYSTEM, user, temperature=0.4)
 
 
+def search_internships_on_web(
+    query: str,
+    location: str | None = None,
+    skills: list[str] | None = None,
+) -> list[dict]:
+    """Use Gemma 4 + Google Search grounding to find real internships on the internet."""
+    user = internships_prompts.gemma_web_search_prompt(query, location, skills)
+    try:
+        raw = gemma_service.generate_json(
+            internships_prompts.GEMMA_WEB_SEARCH_SYSTEM,
+            user,
+            temperature=0.3,
+            use_google_search=True,
+        )
+    except GemmaError:
+        return []
+
+    postings: list[dict] = []
+    for item in raw.get("postings") or []:
+        if not isinstance(item, dict):
+            continue
+        posting = {
+            "title": str(item.get("title") or "Internship").strip(),
+            "company_name": str(item.get("company_name") or "Unknown company").strip(),
+            "description": str(item.get("description") or "").strip()[:4000],
+            "location": str(item.get("location") or "Unspecified").strip(),
+            "salary": item.get("salary"),
+            "source_url": str(item.get("source_url") or "").strip(),
+            "contact_email": extract_contact_email(str(item.get("description") or "")),
+        }
+        if posting["source_url"].startswith("http"):
+            postings.append(posting)
+    return postings
+
+
 def interview_assistant(
     *,
     profile: dict,
@@ -303,6 +353,7 @@ def generate_interview_question(session: dict, question_number: int, stage: str)
         company_context=session.get("company_context") or "a fast-growing technology company",
         conversation_history=conversation_history,
         resume_summary=session.get("resume_summary") or "No resume summary provided.",
+        job_description=session.get("job_description") or "",
         target_skills=", ".join(session.get("target_skills") or []),
         question_number=question_number,
         total_questions=total_questions,
@@ -320,6 +371,7 @@ async def stream_interview_question(session: dict, question_number: int, stage: 
         company_context=session.get("company_context") or "a fast-growing technology company",
         conversation_history=conversation_history,
         resume_summary=session.get("resume_summary") or "No resume summary provided.",
+        job_description=session.get("job_description") or "",
         target_skills=", ".join(session.get("target_skills") or []),
         question_number=question_number,
         total_questions=total_questions,

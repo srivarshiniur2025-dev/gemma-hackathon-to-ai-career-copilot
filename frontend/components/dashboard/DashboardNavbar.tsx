@@ -1,10 +1,9 @@
 "use client";
 
-import { ArrowLeft, Bell, Menu, Search } from "lucide-react";
+import { Bell, Menu, Search } from "lucide-react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import { useDashboardNav } from "@/components/dashboard/DashboardNavContext";
-import { DEMO_DASHBOARD_USER } from "@/lib/dashboard-data";
+import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { cn } from "@/lib/utils";
 
 type DashboardNavbarProps = {
@@ -12,8 +11,8 @@ type DashboardNavbarProps = {
 };
 
 export function DashboardNavbar({ className }: DashboardNavbarProps) {
-  const router = useRouter();
-  const { openMobileNav } = useDashboardNav();
+  const { openMobileNav, toggleNavPanel } = useDashboardNav();
+  const { initials } = useCareerProfile();
 
   return (
     <motion.header
@@ -28,7 +27,10 @@ export function DashboardNavbar({ className }: DashboardNavbarProps) {
       <button
         type="button"
         aria-label="Open menu"
-        onClick={openMobileNav}
+        onClick={() => {
+          toggleNavPanel();
+          openMobileNav();
+        }}
         className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-muted-secondary transition-colors hover:bg-background-hover md:hidden"
       >
         <Menu className="h-5 w-5" />
@@ -36,11 +38,11 @@ export function DashboardNavbar({ className }: DashboardNavbarProps) {
 
       <button
         type="button"
-        aria-label="Go back"
-        onClick={() => router.back()}
-        className="hidden h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-muted-secondary transition-colors hover:bg-background-hover sm:flex"
+        aria-label="Open navigation menu"
+        onClick={toggleNavPanel}
+        className="hidden h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-muted-secondary transition-colors hover:bg-background-hover md:flex lg:hidden"
       >
-        <ArrowLeft className="h-5 w-5" />
+        <Menu className="h-5 w-5" />
       </button>
 
       <h1 className="text-lg font-bold text-foreground-heading sm:text-xl">Dashboard</h1>
@@ -65,12 +67,8 @@ export function DashboardNavbar({ className }: DashboardNavbarProps) {
           <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-accent" />
         </button>
 
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white"
-          style={{ backgroundColor: DEMO_DASHBOARD_USER.avatarColor }}
-          aria-hidden
-        >
-          {DEMO_DASHBOARD_USER.initials}
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-sm font-bold text-white" aria-hidden>
+          {initials}
         </div>
       </div>
     </motion.header>

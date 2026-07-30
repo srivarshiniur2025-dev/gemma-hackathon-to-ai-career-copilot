@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Briefcase,
+  CalendarDays,
   ClipboardCheck,
   FileText,
   LayoutDashboard,
@@ -18,12 +19,14 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDashboardNav } from "@/components/dashboard/DashboardNavContext";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/assessment", icon: ClipboardCheck, label: "Skill Assessment" },
   { href: "/roadmap", icon: Map, label: "Learning Roadmap" },
+  { href: "/planner", icon: CalendarDays, label: "Planner" },
   { href: "/resume", icon: FileText, label: "Resume Builder" },
   { href: "/internships", icon: Briefcase, label: "Internships" },
   { href: "/interview", icon: Mic, label: "Mock Interview" },
@@ -31,40 +34,56 @@ const navItems = [
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
-function NavIcon({
+function isActive(pathname: string, href: string) {
+  if (href === "/dashboard") return pathname === "/dashboard";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function NavLink({
   href,
   icon: Icon,
   label,
-  active,
+  expanded,
   onNavigate,
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
-  active: boolean;
+  expanded: boolean;
   onNavigate?: () => void;
 }) {
+  const pathname = usePathname();
+  const active = isActive(pathname, href);
+
   return (
     <Link
       href={href}
       title={label}
       aria-label={label}
       onClick={onNavigate}
-      className="group relative flex items-center justify-center"
-    >
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className={cn(
-          "flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl transition-colors duration-200",
-          active
+      className={cn(
+        "group relative flex items-center rounded-xl transition-colors duration-200",
+        expanded ? "w-full gap-3 px-3 py-2.5" : "h-11 w-11 justify-center",
+        active
+          ? expanded
             ? "bg-accent text-white shadow-sm"
-            : "text-muted-secondary hover:bg-background-hover"
+            : "bg-accent text-white shadow-sm"
+          : "text-muted-secondary hover:bg-background-hover"
+      )}
+    >
+      <Icon className="h-5 w-5 shrink-0" />
+      <AnimatePresence>
+        {expanded && (
+          <motion.span
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -8 }}
+            className="truncate text-sm font-medium"
+          >
+            {label}
+          </motion.span>
         )}
-      >
-        <Icon className="h-5 w-5" />
-      </motion.div>
+      </AnimatePresence>
     </Link>
   );
 }
@@ -72,60 +91,77 @@ function NavIcon({
 type DashboardIconSidebarProps = {
   mobileOpen?: boolean;
   onMobileClose?: () => void;
-  onMobileOpen?: () => void;
 };
 
-export function DashboardIconSidebar({ mobileOpen, onMobileClose, onMobileOpen }: DashboardIconSidebarProps) {
-  const pathname = usePathname();
+export function DashboardIconSidebar({ mobileOpen, onMobileClose }: DashboardIconSidebarProps) {
   const router = useRouter();
   const { logout } = useAuth();
+  const { navPanelOpen, toggleNavPanel, closeNavPanel, closeMobileNav } = useDashboardNav();
+
+  const expanded = navPanelOpen;
 
   async function handleLogout() {
     await logout();
     router.push("/login");
   }
 
-  const sidebarContent = (
-    <div className="flex h-full flex-col items-center py-6">
+  function handleNavClick() {
+    onMobileClose?.();
+    closeNavPanel();
+  }
+
+  const sidebarInner = (
+    <div className={cn("flex h-full flex-col py-6", expanded ? "px-4" : "items-center px-0")}>
       <button
         type="button"
-        aria-label="Menu"
-        onClick={onMobileOpen}
-        className="mb-8 flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl text-muted-secondary transition-colors hover:bg-background-hover lg:pointer-events-none"
+        aria-label={expanded ? "Close menu" : "Open menu"}
+        onClick={toggleNavPanel}
+        className={cn(
+          "mb-8 flex cursor-pointer items-center rounded-xl text-muted-secondary transition-colors hover:bg-background-hover",
+          expanded ? "h-10 w-full justify-start gap-3 px-3" : "h-11 w-11 justify-center"
+        )}
       >
-        <Menu className="h-5 w-5" />
+        {expanded ? <X className="h-5 w-5 shrink-0" /> : <Menu className="h-5 w-5" />}
+        {expanded && <span className="text-sm font-semibold text-foreground-heading">Menu</span>}
       </button>
 
-      <nav className="flex flex-1 flex-col items-center gap-2">
+      <nav className={cn("flex flex-1 flex-col gap-1.5", expanded ? "w-full" : "items-center")}>
         {navItems.map(({ href, icon, label }) => (
-          <NavIcon
+          <NavLink
             key={href}
             href={href}
             icon={icon}
             label={label}
-            active={pathname === href}
-            onNavigate={onMobileClose}
+            expanded={expanded}
+            onNavigate={handleNavClick}
           />
         ))}
       </nav>
 
-      <div className="mt-auto flex flex-col items-center gap-2 pt-4">
+      <div className={cn("mt-auto flex flex-col gap-2 pt-4", expanded ? "w-full" : "items-center")}>
         <Link
           href="/settings"
           title="Profile"
-          aria-label="Profile"
-          onClick={onMobileClose}
-          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl text-muted-secondary transition-colors hover:bg-background-hover"
+          onClick={handleNavClick}
+          className={cn(
+            "flex cursor-pointer items-center rounded-xl text-muted-secondary transition-colors hover:bg-background-hover",
+            expanded ? "gap-3 px-3 py-2.5" : "h-11 w-11 justify-center"
+          )}
         >
-          <User className="h-5 w-5" />
+          <User className="h-5 w-5 shrink-0" />
+          {expanded && <span className="text-sm font-medium">Profile</span>}
         </Link>
         <button
           type="button"
           aria-label="Logout"
           onClick={handleLogout}
-          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl text-muted-secondary transition-colors hover:bg-background-hover"
+          className={cn(
+            "flex cursor-pointer items-center rounded-xl text-muted-secondary transition-colors hover:bg-background-hover",
+            expanded ? "gap-3 px-3 py-2.5" : "h-11 w-11 justify-center"
+          )}
         >
-          <LogOut className="h-5 w-5" />
+          <LogOut className="h-5 w-5 shrink-0" />
+          {expanded && <span className="text-sm font-medium">Logout</span>}
         </button>
       </div>
     </div>
@@ -133,12 +169,16 @@ export function DashboardIconSidebar({ mobileOpen, onMobileClose, onMobileOpen }
 
   return (
     <>
-      {/* Desktop / tablet icon rail */}
-      <aside className="hidden h-full w-[82px] shrink-0 flex-col border-r border-border bg-white md:flex">
-        {sidebarContent}
-      </aside>
+      {/* Desktop / tablet — expandable rail */}
+      <motion.aside
+        animate={{ width: expanded ? 260 : 82 }}
+        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+        className="hidden h-full shrink-0 flex-col overflow-hidden border-r border-border bg-white md:flex"
+      >
+        {sidebarInner}
+      </motion.aside>
 
-      {/* Mobile drawer trigger is in navbar; drawer overlay */}
+      {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -150,21 +190,13 @@ export function DashboardIconSidebar({ mobileOpen, onMobileClose, onMobileOpen }
               onClick={onMobileClose}
             />
             <motion.aside
-              initial={{ x: -82 }}
+              initial={{ x: -280 }}
               animate={{ x: 0 }}
-              exit={{ x: -82 }}
+              exit={{ x: -280 }}
               transition={{ type: "spring", stiffness: 400, damping: 35 }}
-              className="fixed inset-y-0 left-0 z-50 flex w-[82px] flex-col border-r border-border bg-white md:hidden"
+              className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-border bg-white md:hidden"
             >
-              <button
-                type="button"
-                aria-label="Close menu"
-                onClick={onMobileClose}
-                className="absolute right-[-44px] top-4 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white shadow-md"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              {sidebarContent}
+              {sidebarInner}
             </motion.aside>
           </>
         )}

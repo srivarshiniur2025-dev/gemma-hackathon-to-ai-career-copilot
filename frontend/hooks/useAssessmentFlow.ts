@@ -14,6 +14,7 @@ import {
   MOCK_TOTAL_QUESTIONS,
   updateSkillsAfterAnswer,
 } from "@/lib/assessment-data";
+import { saveAssessmentResults } from "@/lib/career-store";
 import type {
   AssessmentAnswerResponse,
   AssessmentInsights,
@@ -56,6 +57,12 @@ export function useAssessmentFlow() {
       apiResults.strengths ?? [],
       apiResults.weaknesses ?? []
     );
+    saveAssessmentResults({
+      skillsEstimate: apiResults.skills_estimate ?? {},
+      summary: apiResults.summary,
+      strengths: apiResults.strengths,
+      weaknesses: apiResults.weaknesses,
+    });
     setResults(built);
     setPhase("results");
   }, []);

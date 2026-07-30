@@ -1,50 +1,85 @@
 "use client";
 
-import {
-  LineDraw,
-  ProgressIndicator,
-  SectionReveal,
-  SectionRevealItem,
-  SectionRevealStagger,
-} from "@/components/motion/SectionReveal";
+import { motion } from "framer-motion";
+import { MapPin, Navigation } from "lucide-react";
+import { SectionReveal, SectionRevealItem, SectionRevealStagger } from "@/components/motion/SectionReveal";
 import { steps } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
+
+const stepColors = [
+  "from-[#2563EB] to-[#1D4ED8]",
+  "from-accent to-[#0F766E]",
+  "from-[#8B5CF6] to-[#7C3AED]",
+  "from-[#10B981] to-[#059669]",
+  "from-[#FB923C] to-[#EA580C]",
+  "from-[#18181B] to-[#27272A]",
+];
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="below-fold-section px-6 py-24 lg:px-8">
-      <div className="mx-auto max-w-3xl">
+    <section id="how-it-works" className="below-fold-section border-t border-[#F4F4F5] bg-white py-28">
+      <div className="relative mx-auto max-w-7xl">
         <SectionReveal variant="slide-up" className="text-center">
-          <h2 className="font-heading text-3xl font-extrabold md:text-4xl">How it works</h2>
-          <p className="mt-4 text-muted">From signup to internship in six clear steps.</p>
-          <LineDraw className="mx-auto mt-8 max-w-xs" />
+          <p className="inline-flex items-center gap-1.5 text-sm font-bold uppercase tracking-widest text-accent">
+            <Navigation className="h-4 w-4" />
+            Route planner
+          </p>
+          <h2 className="font-heading mt-3 text-3xl font-extrabold md:text-5xl">
+            Six waypoints. One journey.
+          </h2>
+          <p className="mx-auto mt-4 max-w-lg text-muted">
+            Follow the dashed route from signup to offer letter — each waypoint unlocks the next on your map.
+          </p>
         </SectionReveal>
 
-        <div className="relative mt-16">
-          <div className="absolute left-6 top-0 bottom-0 w-px bg-border md:left-1/2 md:-translate-x-px">
-            <LineDraw direction="vertical" className="h-full bg-accent/30" />
-          </div>
+        {/* Connecting route line — desktop */}
+        <div className="pointer-events-none absolute left-1/2 top-[280px] hidden h-[calc(100%-320px)] w-px -translate-x-1/2 border-l border-dashed border-accent/25 lg:block" />
 
-          <SectionRevealStagger stagger={0.12}>
-            {steps.map((s, i) => (
-              <SectionRevealItem
-                key={s.step}
-                variant={i % 2 === 0 ? "slide-left" : "slide-right"}
+        <SectionRevealStagger className="relative mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" stagger={0.1}>
+          {steps.map((s, i) => (
+            <SectionRevealItem key={s.step} variant="rotate-in">
+              <motion.div
+                whileHover={{ y: -6 }}
+                className="group relative overflow-hidden rounded-[24px] border border-[#0D9488]/15 bg-white/95 p-6 shadow-[0_8px_30px_rgba(13,148,136,0.06)] backdrop-blur-sm transition-shadow hover:shadow-[0_16px_48px_rgba(13,148,136,0.12)]"
               >
-                <div className={`relative flex gap-8 pb-12 ${i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"}`}>
-                  <div className="hidden flex-1 md:block" />
-                  <div className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white card-shadow md:absolute md:left-1/2 md:-translate-x-1/2">
-                    {s.step}
-                  </div>
-                  <div className="flex-1 rounded-[18px] border border-border bg-white p-6 card-shadow hover:border-border-hover md:max-w-sm">
-                    <h3 className="font-heading font-bold text-foreground-heading">{s.title}</h3>
-                    <p className="mt-2 text-sm text-muted">{s.description}</p>
-                    <ProgressIndicator value={(i + 1) * (100 / steps.length)} className="mt-4" />
-                  </div>
+                {/* Waypoint pin */}
+                <div className="absolute right-4 top-4 flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-accent" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted">
+                    WP-{s.step}
+                  </span>
                 </div>
-              </SectionRevealItem>
-            ))}
-          </SectionRevealStagger>
-        </div>
+
+                <div
+                  className={cn(
+                    "inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-bold text-white shadow-md",
+                    stepColors[i]
+                  )}
+                >
+                  {s.step}
+                </div>
+                <h3 className="font-heading mt-5 text-lg font-bold text-foreground-heading">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted">{s.description}</p>
+
+                {/* Route progress segment */}
+                <div className="mt-5 flex items-center gap-2">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#EDE6D8]">
+                    <motion.div
+                      className={cn("h-full rounded-full bg-gradient-to-r", stepColors[i])}
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${((i + 1) / steps.length) * 100}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.8, delay: i * 0.1 }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-semibold text-muted">
+                    {Math.round(((i + 1) / steps.length) * 100)}%
+                  </span>
+                </div>
+              </motion.div>
+            </SectionRevealItem>
+          ))}
+        </SectionRevealStagger>
       </div>
     </section>
   );

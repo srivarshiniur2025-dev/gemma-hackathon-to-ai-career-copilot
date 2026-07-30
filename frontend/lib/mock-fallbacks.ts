@@ -1,5 +1,13 @@
 import type { InterviewEvaluation, InterviewFocus, InterviewSession } from "./interview-types";
 import type { InternshipSearchResult, VerifiedInternshipRecommendation } from "./types";
+import type { DemoInterviewConfig } from "./interview-demo-questions";
+import {
+  generateRoleInterviewQuestions,
+  storeDemoInterviewConfig,
+} from "./interview-demo-questions";
+
+export type { DemoInterviewConfig };
+export { storeDemoInterviewConfig, loadDemoInterviewConfig } from "./interview-demo-questions";
 
 export const MOCK_INTERNSHIP_SEARCH: InternshipSearchResult[] = [
   {
@@ -80,16 +88,37 @@ export const MOCK_INTERNSHIP_RECOMMENDATIONS: VerifiedInternshipRecommendation[]
 export function createDemoInterviewSession(
   targetRole: string,
   focus: InterviewFocus,
-  companyContext?: string
+  companyContext?: string,
+  jobDescription?: string,
+  questions?: string[]
 ): InterviewSession {
   const now = new Date().toISOString();
+  const sessionId = `demo-${crypto.randomUUID()}`;
+  const q =
+    questions ??
+    generateRoleInterviewQuestions({
+      targetRole,
+      focus,
+      companyContext: companyContext ?? "",
+      jobDescription,
+    });
+
+  const config: DemoInterviewConfig = {
+    targetRole,
+    focus,
+    companyContext: companyContext ?? "",
+    jobDescription: jobDescription ?? "",
+    questions: q,
+  };
+  storeDemoInterviewConfig(sessionId, config);
+
   return {
-    session_id: `demo-${crypto.randomUUID()}`,
+    session_id: sessionId,
     uid: "demo",
     target_role: targetRole,
     focus,
     company_context: companyContext,
-    total_questions: 3,
+    total_questions: q.length,
     status: "active",
     current_stage: "fundamentals",
     question_count: 0,

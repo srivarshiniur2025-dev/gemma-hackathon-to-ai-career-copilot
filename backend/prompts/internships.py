@@ -90,3 +90,41 @@ Rules:
 - Include ONLY indices from the list above
 - match_score: 0-100
 - Skip jobs with very poor fit (omit from matches rather than inventing)"""
+
+
+GEMMA_WEB_SEARCH_SYSTEM = """You are Gemma 4, an AI Career Copilot internship scout for students.
+Use Google Search to find REAL, currently listed internship opportunities on the internet.
+Only include postings you can verify from search results — company career pages, LinkedIn, Indeed, Glassdoor, Wellfound, intern boards, etc.
+Never invent companies or URLs. Prefer legitimate paid internships over suspicious listings."""
+
+
+def gemma_web_search_prompt(query: str, location: str | None, skills: list[str] | None) -> str:
+    skill_line = ", ".join(skills) if skills else "not specified"
+    loc_line = location.strip() if location else "any location (include remote)"
+    return f"""Search the internet for internship opportunities.
+
+Search query: {query}
+Location preference: {loc_line}
+Relevant skills: {skill_line}
+
+Find up to 12 real internship postings. For each, extract title, company, location, brief description, salary if visible, and the direct application or job listing URL.
+
+Return JSON:
+{{
+  "postings": [
+    {{
+      "title": "Software Engineering Intern",
+      "company_name": "Example Corp",
+      "description": "2-3 sentence summary from the listing",
+      "location": "Remote / City",
+      "salary": null,
+      "source_url": "https://..."
+    }}
+  ]
+}}
+
+Rules:
+- source_url must be a real URL from your search results (apply link or job page)
+- Internships and new-grad / junior roles only — no senior full-time jobs
+- Skip listings that ask for upfront payment or seem like scams
+- If fewer than 12 exist, return what you find"""

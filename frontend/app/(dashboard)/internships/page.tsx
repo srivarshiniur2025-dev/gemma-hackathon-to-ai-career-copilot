@@ -24,6 +24,7 @@ import {
 import type { InternshipSearchResult, VerifiedInternshipRecommendation } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { formatInternshipSources } from "@/lib/internship-sources";
 
 const tabs = ["Find Internships", "Gemma Match"] as const;
 
@@ -276,7 +277,7 @@ export default function InternshipsPage() {
                 {results.length > 0 && (
                   <>
                     {filteredResults.length} verified result{filteredResults.length !== 1 ? "s" : ""}
-                    {searchSource && ` · via ${searchSource}`}
+                    {searchSource && ` · via ${formatInternshipSources(searchSource) ?? searchSource}`}
                     {cached && " · cached"}
                   </>
                 )}
@@ -323,7 +324,7 @@ export default function InternshipsPage() {
               <CardContent className="flex flex-col items-center gap-2 py-12 text-center text-muted">
                 <Search className="h-8 w-8 text-accent/60" />
                 <p className="font-medium">Search for internships above</p>
-                <p className="text-sm">Links are validated and each posting is screened by Gemma.</p>
+                <p className="text-sm">Gemma searches the internet via Google Search, then validates links and screens each listing.</p>
               </CardContent>
             </Card>
           )}
@@ -336,7 +337,7 @@ export default function InternshipsPage() {
                 <div>
                   <h2 className="font-bold text-foreground-heading">Personalized Gemma Match</h2>
                   <p className="text-sm text-muted">
-                    Fetches live internships from your profile, validates links, screens for scams, then explains fit.
+                    Fetches live internships across the web from your profile, validates links, screens for scams, then explains fit.
                   </p>
                 </div>
                 <Button
@@ -387,7 +388,7 @@ export default function InternshipsPage() {
                   {overallAdvice}
                   {recommendSource && (
                     <span className="mt-2 block text-xs text-muted">
-                      Source: {recommendSource}
+                      Sources: {formatInternshipSources(recommendSource) ?? recommendSource}
                       {recommendCached && " · cached"}
                     </span>
                   )}

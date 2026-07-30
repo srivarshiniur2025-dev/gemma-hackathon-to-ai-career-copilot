@@ -9,11 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { CountUp } from "@/components/dashboard/CountUp";
-import {
-  dashboardMetrics,
-  roadmapCurveData,
-  skillScoreSparkline,
-} from "@/lib/dashboard-data";
+import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { cn } from "@/lib/utils";
 
 const cardMotion = {
@@ -80,6 +76,8 @@ function CircularProgress({ value, size = 56 }: { value: number; size?: number }
 }
 
 export function MetricCardsGrid() {
+  const { career, skillScore, skillSparkline, roadmapCurve } = useCareerProfile();
+
   return (
     <div className="grid grid-cols-2 gap-3">
       <MetricCardShell
@@ -88,11 +86,11 @@ export function MetricCardsGrid() {
       >
         <p className="text-xs font-medium text-white/80">Skill Score</p>
         <p className="mt-1 text-3xl font-extrabold tracking-tight">
-          <CountUp value={dashboardMetrics.skillScore} suffix="%" />
+          <CountUp value={skillScore} suffix="%" />
         </p>
         <div className="mt-3 h-10 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={skillScoreSparkline}>
+            <LineChart data={skillSparkline}>
               <Line
                 type="monotone"
                 dataKey="v"
@@ -112,13 +110,13 @@ export function MetricCardsGrid() {
       >
         <p className="text-xs font-medium text-white/80">ATS Resume Score</p>
         <p className="mt-1 text-3xl font-extrabold tracking-tight">
-          <CountUp value={dashboardMetrics.atsResumeScore} suffix="%" />
+          <CountUp value={career.resumeAtsScore} suffix="%" />
         </p>
         <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/20">
           <motion.div
             className="h-full rounded-full bg-white"
             initial={{ width: 0 }}
-            animate={{ width: `${dashboardMetrics.atsResumeScore}%` }}
+            animate={{ width: `${career.resumeAtsScore}%` }}
             transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
           />
         </div>
@@ -130,13 +128,13 @@ export function MetricCardsGrid() {
       >
         <p className="text-xs font-medium text-white/80">Roadmap Progress</p>
         <p className="mt-1 text-2xl font-extrabold leading-tight tracking-tight">
-          <CountUp value={dashboardMetrics.roadmapDaysRemaining} />
+          <CountUp value={career.roadmapDaysRemaining} />
           <span className="text-lg font-bold"> Days</span>
         </p>
         <p className="text-xs text-white/70">Remaining</p>
         <div className="mt-2 h-10 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={roadmapCurveData}>
+            <AreaChart data={roadmapCurve}>
               <Area
                 type="monotone"
                 dataKey="progress"
@@ -158,14 +156,16 @@ export function MetricCardsGrid() {
           <div>
             <p className="text-xs font-medium text-white/80">Internship Matches</p>
             <p className="mt-1 text-3xl font-extrabold tracking-tight">
-              <CountUp value={dashboardMetrics.internshipMatches} />
+              <CountUp value={Math.max(career.internshipMatches, 0)} />
             </p>
             <p className="text-xs text-white/70">Matches</p>
           </div>
           <div className="relative flex items-center justify-center">
-            <CircularProgress value={Math.min(dashboardMetrics.internshipMatches * 4, 100)} />
+            <CircularProgress
+              value={Math.min(Math.max(career.internshipMatches, 1) * 4, 100)}
+            />
             <span className="absolute text-[10px] font-bold">
-              <CountUp value={dashboardMetrics.internshipMatches} />
+              <CountUp value={Math.max(career.internshipMatches, 0)} />
             </span>
           </div>
         </div>

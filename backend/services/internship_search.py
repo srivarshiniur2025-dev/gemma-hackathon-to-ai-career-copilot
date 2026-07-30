@@ -32,8 +32,8 @@ async def search_internships(
             "results": [],
             "source": None,
             "message": (
-                "No internship postings found. Try different keywords or add "
-                "Adzuna / SerpAPI keys for broader results."
+                "No internship postings found. Try different keywords or location. "
+                "Add SERPAPI_KEY (Google Jobs — widest web coverage) or Adzuna keys in .env."
             ),
             "cached": False,
         }
