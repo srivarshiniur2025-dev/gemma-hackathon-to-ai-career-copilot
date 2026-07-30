@@ -41,9 +41,8 @@ npm run install:all
 npm run dev
 ```
 
-- **Website:** http://localhost:3000
-- **API (direct):** http://127.0.0.1:8000
-- **Health check (via proxy):** http://localhost:3000/api/health
+- **Website:** https://gemma-hackathon-v1mh.vercel.app
+
 
 One command starts **both** the FastAPI backend and Next.js frontend. The frontend proxies `/api/*` to the backend — no CORS setup required.
 
@@ -59,9 +58,6 @@ MONGODB_DB=career_copilot
 
 **Frontend** — copy `frontend/.env.example` to `frontend/.env.local`:
 
-```env
-BACKEND_URL=http://127.0.0.1:8000
-NEXT_PUBLIC_WS_URL=ws://127.0.0.1:8000
 ```
 
 **Never commit `.env` files or hardcode API keys.** All Gemma calls run server-side in FastAPI only; the frontend never receives the Google API key.
