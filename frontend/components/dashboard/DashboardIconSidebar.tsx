@@ -14,7 +14,6 @@ import {
   Mic,
   Settings,
   TrendingUp,
-  User,
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -139,18 +138,6 @@ export function DashboardIconSidebar({ mobileOpen, onMobileClose }: DashboardIco
       </nav>
 
       <div className={cn("mt-auto flex flex-col gap-2 pt-4", expanded ? "w-full" : "items-center")}>
-        <Link
-          href="/settings"
-          title="Profile"
-          onClick={handleNavClick}
-          className={cn(
-            "flex cursor-pointer items-center rounded-xl text-muted-secondary transition-colors hover:bg-background-hover",
-            expanded ? "gap-3 px-3 py-2.5" : "h-11 w-11 justify-center"
-          )}
-        >
-          <User className="h-5 w-5 shrink-0" />
-          {expanded && <span className="text-sm font-medium">Profile</span>}
-        </Link>
         <button
           type="button"
           aria-label="Logout"
