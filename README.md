@@ -32,18 +32,11 @@ Adaptive assessments, personalized roadmaps, ATS-ready resumes, internship match
 
 ### Clone & run (integrated)
 
-```powershell
-git clone https://github.com/srivarshiniur2025-dev/gemma-hackathon-to-ai-career-copilot.git
-cd gemma-hackathon-to-ai-career-copilot
-npm run install:all
-npm run dev
-```
-
-Or clone from the legacy URL (redirects automatically):
+1. Clone this repository from GitHub (**Code → Clone**).
+2. Open the project folder in your terminal.
+3. Run:
 
 ```powershell
-git clone https://github.com/srivarshiniur2025-dev/gemma-hackathon.git
-cd gemma-hackathon
 npm run install:all
 npm run dev
 ```
@@ -103,7 +96,7 @@ npm run dev
 ## Project Structure
 
 ```
-gemma-hackathon-to-ai-career-copilot/
+ai-career-copilot/
 ├── backend/          # FastAPI + Gemma services
 ├── frontend/         # Next.js app (landing + dashboard)
 ├── vercel.json       # Full-stack deploy config
@@ -117,7 +110,7 @@ gemma-hackathon-to-ai-career-copilot/
 
 Root `vercel.json` uses Vercel **Services** (Next.js + FastAPI).
 
-1. Import the GitHub repo in [Vercel](https://vercel.com/new).
+1. Import this GitHub repository in [Vercel](https://vercel.com/new).
 2. **Root Directory:** repository root (`.`).
 3. Add environment variables for the **backend** service:
 
