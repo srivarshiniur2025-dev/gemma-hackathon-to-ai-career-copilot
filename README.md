@@ -1,6 +1,6 @@
 # AI Career Copilot
 
-**Discover your skills. Build your career.** A premium AI career mentor powered by **Gemma 4** for the [Build with Gemma](https://ai.google.dev/) hackathon.
+**Discover your skills. Build your career.** A premium AI career mentor powered by **Gemma 4** for the [Build with Gemma](https://ai.google.dev/) hackathon
 
 Adaptive assessments, personalized roadmaps, ATS-ready resumes, internship matching, and mock interviews — all guided by Gemma with a unified **Navigator Index** that tracks your progress
 
