@@ -17,7 +17,7 @@ export function ProductivityChart() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.32 }}
-      className="mt-6 rounded-[18px] border border-border bg-white p-4"
+      className="rounded-[24px] border border-white bg-white p-5 shadow-[0_8px_28px_rgba(24,24,27,0.05)]"
     >
       <p className="mb-3 text-xs font-semibold text-foreground-heading">Weekly productivity</p>
       <div className="h-24 w-full">

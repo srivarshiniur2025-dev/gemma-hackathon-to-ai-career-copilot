@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -7,6 +8,7 @@ import {
   CalendarDays,
   ClipboardCheck,
   FileText,
+  FlaskConical,
   LayoutDashboard,
   LogOut,
   Map,
@@ -18,20 +20,23 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { useDashboardNav } from "@/components/dashboard/DashboardNavContext";
+import { navItemsForProfile, type NavItem } from "@/lib/learner-track";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/assessment", icon: ClipboardCheck, label: "Skill Assessment" },
-  { href: "/roadmap", icon: Map, label: "Learning Roadmap" },
-  { href: "/planner", icon: CalendarDays, label: "Planner" },
-  { href: "/resume", icon: FileText, label: "Resume Builder" },
-  { href: "/internships", icon: Briefcase, label: "Internships" },
-  { href: "/interview", icon: Mic, label: "Mock Interview" },
-  { href: "/progress", icon: TrendingUp, label: "Progress" },
-  { href: "/settings", icon: Settings, label: "Settings" },
-];
+const ICONS: Record<NavItem["icon"], ComponentType<{ className?: string }>> = {
+  dashboard: LayoutDashboard,
+  assessment: ClipboardCheck,
+  mocks: FlaskConical,
+  roadmap: Map,
+  planner: CalendarDays,
+  resume: FileText,
+  internships: Briefcase,
+  interview: Mic,
+  progress: TrendingUp,
+  settings: Settings,
+};
 
 function isActive(pathname: string, href: string) {
   if (href === "/dashboard") return pathname === "/dashboard";
@@ -46,7 +51,7 @@ function NavLink({
   onNavigate,
 }: {
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   label: string;
   expanded: boolean;
   onNavigate?: () => void;
@@ -95,6 +100,8 @@ type DashboardIconSidebarProps = {
 export function DashboardIconSidebar({ mobileOpen, onMobileClose }: DashboardIconSidebarProps) {
   const router = useRouter();
   const { logout } = useAuth();
+  const { profile } = useCareerProfile();
+  const navItems = navItemsForProfile(profile);
   const { navPanelOpen, toggleNavPanel, closeNavPanel, closeMobileNav } = useDashboardNav();
 
   const expanded = navPanelOpen;
@@ -129,7 +136,7 @@ export function DashboardIconSidebar({ mobileOpen, onMobileClose }: DashboardIco
           <NavLink
             key={href}
             href={href}
-            icon={icon}
+            icon={ICONS[icon]}
             label={label}
             expanded={expanded}
             onNavigate={handleNavClick}

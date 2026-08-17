@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from backend.database import get_db
+from backend.database import get_db, is_mongo_available, set_mongo_available
 
 _FALLBACK_FILE = Path(__file__).resolve().parent.parent / "data" / "users.json"
 _memory: dict[str, dict[str, Any]] = {}
@@ -70,15 +70,37 @@ def _save_fallback() -> None:
         logging.warning("Could not persist fallback user store: %s", exc)
 
 
+def _from_fallback(uid: str) -> dict | None:
+    store = _load_fallback()
+    return _serialize(store[uid]) if uid in store else None
+
+
+def _upsert_fallback(uid: str, email: str, name: str, updates: dict | None = None) -> dict:
+    store = _load_fallback()
+    current = store.get(uid) or _empty_profile(uid, email, name)
+    if email:
+        current["email"] = email
+    if name:
+        current["name"] = name
+    if updates:
+        current.update(updates)
+    store[uid] = current
+    _save_fallback()
+    return _serialize(current)
+
+
 async def get_user_by_uid(uid: str) -> dict | None:
-    try:
-        db = get_db()
-        found = await db.users.find_one({"uid": uid}, {"_id": 0})
-        if found:
-            return found
-    except Exception as exc:
-        logging.warning("MongoDB read failed, using local profile store: %s", exc)
-    return _serialize(_load_fallback()[uid]) if uid in _load_fallback() else None
+    if is_mongo_available():
+        try:
+            db = get_db()
+            found = await db.users.find_one({"uid": uid}, {"_id": 0})
+            set_mongo_available(True)
+            if found:
+                return _serialize(found)
+        except Exception as exc:
+            set_mongo_available(False)
+            logging.warning("MongoDB read failed, using local profile store: %s", exc)
+    return _from_fallback(uid)
 
 
 async def create_user(uid: str, email: str, name: str) -> dict:
@@ -87,40 +109,40 @@ async def create_user(uid: str, email: str, name: str) -> dict:
         return existing
 
     doc = _empty_profile(uid, email, name)
-    try:
-        db = get_db()
-        await db.users.insert_one(doc)
-        return _serialize(doc)
-    except Exception as exc:
-        logging.warning("MongoDB write failed, using local profile store: %s", exc)
-        _load_fallback()[uid] = doc
-        _save_fallback()
-        return _serialize(doc)
+    if is_mongo_available():
+        try:
+            db = get_db()
+            await db.users.insert_one(doc)
+            set_mongo_available(True)
+            return _serialize(doc)
+        except Exception as exc:
+            set_mongo_available(False)
+            logging.warning("MongoDB write failed, using local profile store: %s", exc)
+    return _upsert_fallback(uid, email, name)
 
 
 async def update_user(uid: str, updates: dict) -> dict | None:
     updates = {**updates, "updated_at": _now()}
-    try:
-        db = get_db()
-        result = await db.users.find_one_and_update(
-            {"uid": uid},
-            {"$set": updates},
-            return_document=True,
-        )
-        if result:
-            result.pop("_id", None)
-            return result
-    except Exception as exc:
-        logging.warning("MongoDB update failed, using local profile store: %s", exc)
+    if is_mongo_available():
+        try:
+            db = get_db()
+            result = await db.users.find_one_and_update(
+                {"uid": uid},
+                {"$set": updates},
+                return_document=True,
+            )
+            set_mongo_available(True)
+            if result:
+                result.pop("_id", None)
+                return _serialize(result)
+        except Exception as exc:
+            set_mongo_available(False)
+            logging.warning("MongoDB update failed, using local profile store: %s", exc)
 
-    store = _load_fallback()
-    current = store.get(uid)
-    if not current:
-        return None
-    current.update(updates)
-    store[uid] = current
-    _save_fallback()
-    return _serialize(current)
+    existing = _from_fallback(uid)
+    email = (existing or {}).get("email", "") or updates.get("email", "")
+    name = (existing or {}).get("name", "") or updates.get("name", "") or "Student"
+    return _upsert_fallback(uid, str(email), str(name), updates)
 
 
 async def patch_user_field(uid: str, key: str, value) -> dict | None:

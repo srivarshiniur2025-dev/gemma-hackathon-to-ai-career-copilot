@@ -18,6 +18,7 @@ export type Profile = {
     dotColor?: string;
     bgColor?: string;
     why?: string;
+    date?: string;
   }[];
   interests: string[];
   target_role: string;

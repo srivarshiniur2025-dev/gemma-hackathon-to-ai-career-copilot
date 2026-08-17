@@ -13,7 +13,7 @@ export function StreakCard() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay: 0.22 }}
-      className="mt-6 overflow-hidden rounded-[22px] border border-border bg-gradient-to-br from-[#18181B] to-[#27272A] p-5 text-white shadow-[0_4px_20px_rgba(24,24,27,0.12)]"
+      className="overflow-hidden rounded-[22px] bg-gradient-to-br from-[#18181B] via-[#27272A] to-[#7C2D12] p-5 text-white shadow-[0_8px_28px_rgba(24,24,27,0.16)]"
     >
       <div className="flex items-center justify-between">
         <div>

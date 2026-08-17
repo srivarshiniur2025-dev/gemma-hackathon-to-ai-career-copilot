@@ -14,7 +14,8 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { profile, loading } = useCareerProfile();
   const { mobileNavOpen, closeMobileNav } = useDashboardNav();
-  const isAssessment = pathname === "/assessment";
+  const isMockExam = pathname.startsWith("/mocks/");
+  const isAssessment = pathname === "/assessment" || isMockExam;
   const isDashboard = pathname === "/dashboard";
 
   useEffect(() => {

@@ -16,6 +16,25 @@ function getApiBase(): string {
   return process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
 }
 
+function formatApiDetail(detail: unknown): string {
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (item && typeof item === "object" && "msg" in item) {
+          const loc = Array.isArray((item as { loc?: unknown }).loc)
+            ? (item as { loc: unknown[] }).loc.filter((p) => p !== "body").join(".")
+            : "";
+          return loc ? `${loc}: ${(item as { msg: string }).msg}` : String((item as { msg: string }).msg);
+        }
+        return typeof item === "string" ? item : JSON.stringify(item);
+      })
+      .join("; ");
+  }
+  if (detail && typeof detail === "object") return JSON.stringify(detail);
+  return String(detail ?? "Request failed");
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -24,19 +43,29 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
   const res = await fetch(`${getApiBase()}${path}`, { ...options, headers });
-
-  if (!res.ok) {
-    let detail = `Request failed: ${res.status}`;
+  const raw = await res.text();
+  let parsed: unknown = null;
+  if (raw.trim()) {
     try {
-      const body = await res.json();
-      detail = body.detail ?? body.message ?? JSON.stringify(body);
+      parsed = JSON.parse(raw);
     } catch {
-      detail = (await res.text()) || detail;
+      parsed = null;
     }
-    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
   }
 
-  return res.json() as Promise<T>;
+  if (!res.ok) {
+    const body = parsed && typeof parsed === "object" ? (parsed as { detail?: unknown; message?: unknown }) : null;
+    const detail = formatApiDetail(
+      body?.detail ?? body?.message ?? (raw ? raw.slice(0, 280) : `Request failed: ${res.status}`)
+    );
+    throw new Error(detail);
+  }
+
+  if (parsed === null && raw.trim()) {
+    throw new Error(`Unexpected response from ${path}`);
+  }
+
+  return (parsed ?? {}) as T;
 }
 
 export const api = {

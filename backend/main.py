@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from backend.auth import init_firebase
 from backend.config import settings
-from backend.database import close_db, get_db
+from backend.database import close_db, get_db, set_mongo_available
 from backend.routers import assessment, chat, health, internships, interview, interview_simulation, planner, resume, roadmap, users
 from backend.services.gemma import GemmaAuthError, GemmaNetworkError, GemmaRateLimitError
 
@@ -24,7 +24,9 @@ async def lifespan(app: FastAPI):
         await db.interview_sessions.create_index("uid")
         await db.internship_search_cache.create_index("cache_key", unique=True)
         await db.internship_search_cache.create_index("cached_at")
+        set_mongo_available(True)
     except Exception as exc:
+        set_mongo_available(False)
         logging.warning("MongoDB unavailable at startup — API will run in degraded mode: %s", exc)
     yield
     await close_db()

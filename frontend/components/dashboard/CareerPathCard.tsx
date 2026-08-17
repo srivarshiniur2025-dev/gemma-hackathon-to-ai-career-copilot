@@ -1,59 +1,59 @@
 "use client";
 
-import { ArrowRight, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
+import { experienceForProfile } from "@/lib/learner-track";
 import { cn } from "@/lib/utils";
 
+const NODE = ["#0D9488", "#2563EB", "#8B5CF6", "#F59E0B", "#EC4899"];
+
 export function CareerPathCard() {
-  const { career, displayName } = useCareerProfile();
+  const { career, profile } = useCareerProfile();
+  const exp = experienceForProfile(profile);
+  const title =
+    exp === "neet"
+      ? "Runway"
+      : exp === "school"
+        ? "Path"
+        : exp === "high_school"
+          ? "After 12th"
+          : "Career path";
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay: 0.12 }}
-      className="mx-4 mb-4 rounded-[22px] border border-border bg-[#FAFAFA] p-5 sm:mx-6"
     >
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h2 className="text-base font-bold text-foreground-heading">Predicted career path</h2>
-          <p className="text-xs text-muted">
-            Gemma forecast for {displayName.split(" ")[0]} · {career.targetRole}
-          </p>
-        </div>
-        <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-medium text-accent shadow-sm">
-          <MapPin className="h-3 w-3" />
-          AI forecast
-        </span>
-      </div>
-
-      <div className="relative flex flex-col gap-0 sm:flex-row sm:items-stretch sm:gap-0">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{title}</p>
+      <ol className="mt-5 space-y-0">
         {career.careerPath.map((stage, i) => (
-          <div key={stage.id} className="relative flex flex-1 flex-col items-center sm:flex-row">
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 + i * 0.08 }}
-              className={cn(
-                "w-full rounded-[18px] border p-4 text-center sm:text-left",
-                stage.status === "current"
-                  ? "border-accent/30 bg-white shadow-[0_2px_12px_rgba(13,148,136,0.08)]"
-                  : "border-border/80 bg-white/80"
+          <li key={stage.id} className="flex gap-4">
+            <div className="flex flex-col items-center">
+              <span
+                className={cn(
+                  "mt-1 h-3 w-3 rounded-full ring-4",
+                  stage.status === "current" ? "ring-accent/20" : "ring-transparent"
+                )}
+                style={{ backgroundColor: NODE[i % NODE.length] }}
+              />
+              {i < career.careerPath.length - 1 && (
+                <span
+                  className="w-0.5 flex-1"
+                  style={{ backgroundColor: `${NODE[i % NODE.length]}33` }}
+                />
               )}
-            >
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-accent">
+            </div>
+            <div className={cn("pb-6", i === career.careerPath.length - 1 && "pb-0")}>
+              <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: NODE[i % NODE.length] }}>
                 {stage.year}
               </p>
-              <p className="mt-1 text-sm font-bold text-foreground-heading">{stage.title}</p>
-              <p className="mt-0.5 text-xs text-muted">{stage.subtitle}</p>
-            </motion.div>
-            {i < career.careerPath.length - 1 && (
-              <ArrowRight className="my-2 h-4 w-4 shrink-0 rotate-90 text-muted sm:mx-1 sm:rotate-0" />
-            )}
-          </div>
+              <p className="mt-0.5 text-sm font-bold text-foreground-heading">{stage.title}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-muted">{stage.subtitle}</p>
+            </div>
+          </li>
         ))}
-      </div>
+      </ol>
     </motion.section>
   );
 }

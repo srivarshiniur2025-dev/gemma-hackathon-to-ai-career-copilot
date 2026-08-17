@@ -50,6 +50,8 @@ export type TimelineEvent = {
   color: string;
   dotColor: string;
   bgColor: string;
+  date?: string;
+  why?: string;
 };
 
 export const weeklyTimelineEvents: TimelineEvent[] = [

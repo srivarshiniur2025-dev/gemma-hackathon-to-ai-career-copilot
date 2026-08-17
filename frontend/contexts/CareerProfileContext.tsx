@@ -22,6 +22,7 @@ import {
   saveCareerData,
 } from "@/lib/career-store";
 import { applyOnboardingToCareer } from "@/lib/personalize";
+import { loadLocalProfile, saveLocalProfile } from "@/lib/local-profile";
 import type { Profile } from "@/lib/types";
 
 type CareerProfileContextValue = {
@@ -127,6 +128,12 @@ export function CareerProfileProvider({ children }: { children: React.ReactNode 
     const withStreak = recordDailyActivity(user.email);
     setCareer(withStreak);
 
+    const cached = loadLocalProfile(user.email);
+    if (cached) {
+      mergeFromProfile(cached);
+      setLoading(false);
+    }
+
     void (async () => {
       try {
         const token = await getIdToken();
@@ -137,15 +144,23 @@ export function CareerProfileProvider({ children }: { children: React.ReactNode 
         } catch {
           p = await api.registerUser(user.name);
         }
+        const local = loadLocalProfile(user.email);
+        if (local?.onboarding_complete && !p.onboarding_complete) {
+          p = { ...p, ...local, uid: p.uid || local.uid };
+          void api.updateMe(local).catch(() => undefined);
+        }
+        saveLocalProfile(p, user.email);
         mergeFromProfile(p);
       } catch {
-        const local = loadCareerData(user.email);
-        const seeded = {
-          ...local,
-          degree: user.college ? `Student • ${user.college}` : local.degree,
-        };
-        saveCareerData(seeded, user.email);
-        setCareer(seeded);
+        if (!cached) {
+          const local = loadCareerData(user.email);
+          const seeded = {
+            ...local,
+            degree: user.college ? `Student • ${user.college}` : local.degree,
+          };
+          saveCareerData(seeded, user.email);
+          setCareer(seeded);
+        }
       } finally {
         setLoading(false);
       }

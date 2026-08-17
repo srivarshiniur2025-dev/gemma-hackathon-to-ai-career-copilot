@@ -1,13 +1,16 @@
 "use client";
 
-import { ClipboardCheck, MessageSquare, Settings } from "lucide-react";
+import { ClipboardCheck, FlaskConical, MessageSquare, Mic, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
+import { experienceForProfile, showsExamMocks, showsMockInterviews } from "@/lib/learner-track";
 import { Button } from "@/components/ui/button";
 
 export function DashboardProfileHeader() {
-  const { displayName, subtitle, initials } = useCareerProfile();
+  const { displayName, subtitle, initials, profile } = useCareerProfile();
+  const exam = showsExamMocks(profile);
+  const interview = showsMockInterviews(profile);
 
   return (
     <motion.div
@@ -33,18 +36,38 @@ export function DashboardProfileHeader() {
             <span className="hidden sm:inline">Ask Gemma</span>
           </Button>
         </Link>
-        <Link href="/assessment">
-          <Button variant="outline" size="sm" className="gap-2 rounded-xl cursor-pointer">
-            <ClipboardCheck className="h-4 w-4" />
-            <span className="hidden sm:inline">Assess</span>
-          </Button>
-        </Link>
-        <Link href="/settings">
-          <Button variant="outline" size="sm" className="gap-2 rounded-xl cursor-pointer">
-            <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">Settings</span>
-          </Button>
-        </Link>
+        {exam ? (
+          <Link href="/mocks">
+            <Button variant="outline" size="sm" className="gap-2 rounded-xl cursor-pointer">
+              <FlaskConical className="h-4 w-4" />
+              <span className="hidden sm:inline">
+                {experienceForProfile(profile) === "school" ? "Practice" : "Mocks"}
+              </span>
+            </Button>
+          </Link>
+        ) : (
+          <Link href="/assessment">
+            <Button variant="outline" size="sm" className="gap-2 rounded-xl cursor-pointer">
+              <ClipboardCheck className="h-4 w-4" />
+              <span className="hidden sm:inline">Assess</span>
+            </Button>
+          </Link>
+        )}
+        {interview ? (
+          <Link href="/interview">
+            <Button variant="outline" size="sm" className="gap-2 rounded-xl cursor-pointer">
+              <Mic className="h-4 w-4" />
+              <span className="hidden sm:inline">Interview</span>
+            </Button>
+          </Link>
+        ) : (
+          <Link href="/settings">
+            <Button variant="outline" size="sm" className="gap-2 rounded-xl cursor-pointer">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Settings</span>
+            </Button>
+          </Link>
+        )}
       </div>
     </motion.div>
   );

@@ -1,115 +1,201 @@
 "use client";
 
-import { CalendarDays, Plus } from "lucide-react";
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { FormEvent, useMemo, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { FadeIn } from "@/components/motion/FadeIn";
+import { MonthCalendar } from "@/components/calendar/MonthCalendar";
 import { PlannerCopilot } from "@/components/planner/PlannerCopilot";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { experienceForProfile } from "@/lib/learner-track";
+import {
+  addDaysISO,
+  eventsOnDate,
+  formatLongDate,
+  todayISO,
+} from "@/lib/calendar";
 import type { TimelineEvent } from "@/lib/dashboard-data";
-import { weeklyTimelineEvents } from "@/lib/dashboard-data";
 
 const PRESET_COLORS = [
+  { color: "#0D9488", dotColor: "#0D9488", bgColor: "#F0FDFA" },
   { color: "#2563EB", dotColor: "#2563EB", bgColor: "#EFF6FF" },
   { color: "#FB923C", dotColor: "#FB923C", bgColor: "#FFF7ED" },
-  { color: "#10B981", dotColor: "#10B981", bgColor: "#ECFDF5" },
   { color: "#8B5CF6", dotColor: "#8B5CF6", bgColor: "#F5F3FF" },
 ];
 
+function defaultTitle(exp: ReturnType<typeof experienceForProfile>) {
+  if (exp === "neet") return "NEET study block";
+  if (exp === "school") return "Chapter practice";
+  if (exp === "high_school") return "Board revision";
+  return "Build session";
+}
+
+function hourLabel(hour: number) {
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const h = hour % 12 || 12;
+  return `${h}:00 ${suffix}`;
+}
+
 export default function PlannerPage() {
-  const { career, updatePlanner, displayName } = useCareerProfile();
+  const { career, updatePlanner, displayName, profile } = useCareerProfile();
+  const exp = experienceForProfile(profile);
+  const today = todayISO();
+  const now = useMemo(() => new Date(), []);
+  const [month, setMonth] = useState({ year: now.getFullYear(), month: now.getMonth() });
+  const [selected, setSelected] = useState(today);
+  const [title, setTitle] = useState("");
+  const [hour, setHour] = useState(18);
+  const dayEvents = eventsOnDate(career.plannerEvents, selected);
 
-  function resetToDefault() {
-    updatePlanner([...weeklyTimelineEvents]);
-  }
-
-  function addStudyBlock() {
+  function addBlock(e: FormEvent) {
+    e.preventDefault();
     const palette = PRESET_COLORS[career.plannerEvents.length % PRESET_COLORS.length];
+    const startHour = Number(hour) || 18;
     const newEvent: TimelineEvent = {
-      id: `custom-${Date.now()}`,
-      title: "Gemma study block",
-      startTime: "2:00",
-      endTime: "3:00",
-      startHour: 14,
+      id: `cal-${Date.now()}`,
+      title: title.trim() || defaultTitle(exp),
+      startTime: hourLabel(startHour),
+      endTime: hourLabel(Math.min(23, startHour + 1)),
+      startHour,
       durationHours: 1,
+      date: selected,
       ...palette,
     };
     updatePlanner([...career.plannerEvents, newEvent]);
+    setTitle("");
+  }
+
+  function removeEvent(id: string) {
+    updatePlanner(career.plannerEvents.filter((event) => event.id !== id));
+  }
+
+  function seedWeek() {
+    const palette = PRESET_COLORS;
+    const blocks = [0, 1, 2, 3, 4].map((i) => {
+      const colors = palette[i % palette.length];
+      return {
+        id: `week-${Date.now()}-${i}`,
+        title: defaultTitle(exp),
+        startTime: hourLabel(18),
+        endTime: hourLabel(19),
+        startHour: 18,
+        durationHours: 1,
+        date: addDaysISO(today, i),
+        ...colors,
+      } satisfies TimelineEvent;
+    });
+    updatePlanner([...career.plannerEvents, ...blocks]);
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <FadeIn>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-foreground-heading">Career Planner</h1>
+            <h1 className="text-2xl font-extrabold text-foreground-heading">Calendar</h1>
             <p className="mt-1 text-muted">
-              Personalized weekly plan for {displayName.split(" ")[0]} — synced with your dashboard timeline.
+              {exp === "neet"
+                ? `Study, chapter tests, and mocks for ${displayName.split(" ")[0]} — every track gets a calendar.`
+                : exp === "school"
+                  ? `Practice slots for ${displayName.split(" ")[0]}. Tap a day, add a block.`
+                  : `Your week on a real calendar, ${displayName.split(" ")[0]}.`}
             </p>
           </div>
-          <Link href="/dashboard">
-            <Button variant="outline" className="rounded-xl cursor-pointer">
-              View dashboard
-            </Button>
-          </Link>
+          <Button variant="outline" size="sm" onClick={seedWeek} className="rounded-xl cursor-pointer">
+            Fill this week
+          </Button>
         </div>
       </FadeIn>
 
       <FadeIn delay={0.05}>
-        <Card className="border-border/80 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <CalendarDays className="h-5 w-5 text-accent" />
-              This week
-            </CardTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={resetToDefault} className="cursor-pointer rounded-xl">
-                Reset
-              </Button>
-              <Button size="sm" onClick={addStudyBlock} className="gap-1 cursor-pointer rounded-xl bg-accent hover:bg-accent-hover">
-                <Plus className="h-4 w-4" />
-                Add block
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {career.plannerEvents.map((event, i) => (
-              <motion.div
-                key={event.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center justify-between rounded-[18px] border border-border px-4 py-3"
-                style={{ backgroundColor: event.bgColor }}
-              >
-                <div>
-                  <p className="font-semibold text-sm text-foreground-heading">{event.title}</p>
-                  <p className="text-xs text-muted">
-                    {event.startTime} – {event.endTime}
-                  </p>
-                </div>
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: event.dotColor }}
-                />
-              </motion.div>
-            ))}
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <MonthCalendar
+            year={month.year}
+            month={month.month}
+            selected={selected}
+            events={career.plannerEvents}
+            onSelect={setSelected}
+            onPrevMonth={() =>
+              setMonth((m) =>
+                m.month === 0 ? { year: m.year - 1, month: 11 } : { year: m.year, month: m.month - 1 }
+              )
+            }
+            onNextMonth={() =>
+              setMonth((m) =>
+                m.month === 11 ? { year: m.year + 1, month: 0 } : { year: m.year, month: m.month + 1 }
+              )
+            }
+          />
+
+          <div className="rounded-[22px] border border-border bg-white p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-accent">{formatLongDate(selected)}</p>
+            <h2 className="mt-1 font-heading text-lg font-bold text-foreground-heading">Day plan</h2>
+
+            <ul className="mt-4 space-y-2">
+              {dayEvents.length === 0 && (
+                <li className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
+                  Empty day — add a study block below.
+                </li>
+              )}
+              {dayEvents.map((event) => (
+                <li
+                  key={event.id}
+                  className="flex items-center justify-between rounded-[16px] border border-border px-4 py-3"
+                  style={{ backgroundColor: event.bgColor }}
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-foreground-heading">{event.title}</p>
+                    <p className="text-xs text-muted">
+                      {event.startTime} – {event.endTime}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${event.title}`}
+                    onClick={() => removeEvent(event.id)}
+                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-white/80 hover:text-error"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            <form onSubmit={addBlock} className="mt-5 space-y-3 border-t border-border pt-4">
+              <Label htmlFor="block-title">New block</Label>
+              <Input
+                id="block-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={defaultTitle(exp)}
+              />
+              <div className="flex gap-2">
+                <select
+                  value={hour}
+                  onChange={(e) => setHour(Number(e.target.value))}
+                  className="h-11 flex-1 cursor-pointer rounded-[14px] border border-border bg-white px-3 text-sm outline-none focus:border-accent"
+                  aria-label="Start hour"
+                >
+                  {Array.from({ length: 14 }, (_, i) => i + 7).map((h) => (
+                    <option key={h} value={h}>
+                      {hourLabel(h)}
+                    </option>
+                  ))}
+                </select>
+                <Button type="submit" variant="accent" className="gap-1">
+                  <Plus className="h-4 w-4" />
+                  Add
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
       </FadeIn>
 
       <FadeIn delay={0.08}>
         <PlannerCopilot />
-      </FadeIn>
-
-      <FadeIn delay={0.1}>
-        <Card className="border-dashed border-accent/30 bg-accent/5">
-          <CardContent className="p-5 text-sm text-muted">
-            Chat with Gemma about free time and difficulties. Confirm a plan to add those blocks here and on the dashboard timeline.
-          </CardContent>
-        </Card>
       </FadeIn>
     </div>
   );

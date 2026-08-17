@@ -1,5 +1,6 @@
 import type { CareerPathStage, CareerData, SkillLevel } from "@/lib/career-store";
 import type { TimelineEvent } from "@/lib/dashboard-data";
+import { addDaysISO, todayISO } from "@/lib/calendar";
 import { getTrack, type LearnerTrack } from "@/lib/onboarding-tracks";
 import type { Profile } from "@/lib/types";
 
@@ -41,12 +42,12 @@ function formatHourLabel(hour: number): string {
 
 export function careerPathForTrack(trackId: string, answers: Record<string, string>, targetRole: string): CareerPathStage[] {
   if (trackId === "bio") {
-    const focus = answers.focus === "medicine" ? "NEET / MBBS path" : "Life-sciences intern";
+    const neet = answers.exam === "neet" || answers.focus === "medicine";
     return [
-      { id: "1", title: "Biology foundations", subtitle: answers.hardest ? `Repair: ${answers.hardest}` : "Core concepts & diagrams", year: "Now", status: "current" },
-      { id: "2", title: focus, subtitle: "Exam or lab-ready skills", year: "Year 1", status: "upcoming" },
-      { id: "3", title: "Research / clinical exposure", subtitle: "Shadowing, internships, projects", year: "Year 2", status: "upcoming" },
-      { id: "4", title: targetRole || "Biotech / medicine", subtitle: "Specialise with proof of work", year: "Year 3–4", status: "upcoming" },
+      { id: "1", title: "Chapter mastery (PCB)", subtitle: answers.hardest ? `Repair: ${answers.hardest}` : "NCERT line-by-line", year: "Now", status: "current" },
+      { id: "2", title: neet ? "PYQ-style grind" : "Application & diagrams", subtitle: "Timed chapter + sectional tests", year: "This season", status: "upcoming" },
+      { id: "3", title: "Full mock stamina", subtitle: "45–180 min PCB papers every week", year: "Peak prep", status: "upcoming" },
+      { id: "4", title: neet ? "NEET UG / MBBS" : targetRole || "Life sciences", subtitle: "Rank from revision, not new chapters", year: "Exam year", status: "upcoming" },
     ];
   }
   if (trackId === "high_school") {
@@ -84,9 +85,10 @@ export function skillsFromOnboarding(trackId: string, answers: Record<string, st
 
   const byTrack: Record<string, SkillLevel[]> = {
     bio: [
-      { name: answers.strength === "human_physio" ? "Physiology" : "Biology concepts", level: 68, label: "Developing" },
-      { name: answers.hardest || "Weak chapter", level: 42, label: "Beginner" },
-      { name: answers.gap === "lab" ? "Lab method" : "Application questions", level: 48, label: "Beginner" },
+      { name: "Biology", level: answers.strength ? 68 : 55, label: "Developing" },
+      { name: "Physics", level: answers.phy_level === "strong" ? 70 : answers.phy_level === "weak" ? 38 : 50, label: answers.phy_level === "strong" ? "Intermediate" : "Beginner" },
+      { name: "Chemistry", level: answers.chem_level === "strong" ? 70 : answers.chem_level === "weak" ? 40 : 52, label: answers.chem_level === "strong" ? "Intermediate" : "Beginner" },
+      { name: answers.hardest || "Weak chapter", level: 36, label: "Beginner" },
     ],
     high_school: [
       { name: answers.strong_subject || answers.stream?.toUpperCase() || "Core stream", level: 70, label: "Intermediate" },
@@ -110,7 +112,7 @@ export function skillsFromOnboarding(trackId: string, answers: Record<string, st
 }
 
 export function recommendedFromOnboarding(trackId: string, answers: Record<string, string>): string[] {
-  if (trackId === "bio") return [answers.hardest || "Genetics drills", "Diagram practice", answers.exam === "neet" ? "NEET PYQs" : "Lab notebook"].filter(Boolean);
+  if (trackId === "bio") return [answers.hardest || "Genetics PYQs", "Physics numericals", "Organic mechanisms", "Full NEET mock"].filter(Boolean);
   if (trackId === "high_school") return [answers.weak_subject || "Weak subject repair", "Timed mocks", "Error log"];
   if (trackId === "grade_9_10") return [answers.hard_subject || "Daily 20-min review", answers.curiosity || "Explore one skill", "Exam calm"];
   return [answers.stack === "dsa" || answers.goal === "dsa" ? "Daily DSA" : "Ship a project", "GitHub readme", answers.difficulty === "consistency" ? "Habit tracker" : "Debug journal"];
@@ -120,9 +122,9 @@ export function seedPlannerEvents(trackId: string, answers: Record<string, strin
   const start = hourForFreeTime(answers.free_time);
   const titles: Record<string, string[]> = {
     bio: [
-      answers.hardest ? `${answers.hardest} repair` : "Concept revision",
-      "Diagram / PYQ drill",
-      answers.exam === "neet" ? "NEET mixed quiz" : "Weekly recap",
+      answers.hardest ? `${answers.hardest} repair` : "Biology NCERT",
+      answers.phy_level === "weak" ? "Physics numericals" : "Physics sectional",
+      answers.chem_level === "weak" ? "Organic reactions" : "Chemistry PYQ set",
     ],
     high_school: [
       answers.weak_subject ? `${answers.weak_subject} block` : "Core subject block",
@@ -141,6 +143,7 @@ export function seedPlannerEvents(trackId: string, answers: Record<string, strin
     ],
   };
   const list = titles[trackId] ?? titles.developer;
+  const startDate = todayISO();
   return list.map((title, i) => {
     const hour = Math.min(21, start + i);
     const palette = PALETTE[i % PALETTE.length];
@@ -151,6 +154,7 @@ export function seedPlannerEvents(trackId: string, answers: Record<string, strin
       endTime: formatHourLabel(hour + 1),
       startHour: hour,
       durationHours: 1,
+      date: addDaysISO(startDate, i),
       ...palette,
     };
   });
@@ -208,9 +212,11 @@ export function applyOnboardingToCareer(career: CareerData, profile: Profile): C
 }
 
 export function colorizePlannerEvents(events: TimelineEvent[]): TimelineEvent[] {
+  const start = todayISO();
   return events.map((event, i) => ({
     ...event,
     id: event.id || `gemma-${Date.now()}-${i}`,
+    date: event.date || addDaysISO(start, i),
     ...PALETTE[i % PALETTE.length],
   }));
 }

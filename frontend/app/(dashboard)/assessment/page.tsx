@@ -19,7 +19,11 @@ import { ResultsSkeleton } from "@/components/ui/skeleton";
 import { GemmaBadge, GemmaModelTag } from "@/components/gemma/GemmaBrand";
 import { Button } from "@/components/ui/button";
 import { useAssessmentFlow } from "@/hooks/useAssessmentFlow";
+import { useCareerProfile } from "@/contexts/CareerProfileContext";
+import { showsExamMocks } from "@/lib/learner-track";
 import { ASSESSMENT_SKILLS } from "@/lib/assessment-data";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const ResultsDashboard = dynamic(
   () => import("@/components/assessment/ResultsDashboard").then((m) => m.ResultsDashboard),
@@ -146,6 +150,8 @@ function AssessmentOverview({
 }
 
 export default function AssessmentPage() {
+  const router = useRouter();
+  const { profile, loading: profileLoading } = useCareerProfile();
   const flow = useAssessmentFlow();
   const {
     phase,
@@ -175,6 +181,13 @@ export default function AssessmentPage() {
 
   const showSidebar = phase !== "results" || !results;
   const inQuestionFlow = phase === "question" || phase === "evaluating" || phase === "evaluation";
+
+  useEffect(() => {
+    if (profileLoading) return;
+    if (showsExamMocks(profile)) router.replace("/mocks");
+  }, [profileLoading, profile, router]);
+
+  if (showsExamMocks(profile)) return null;
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-background">

@@ -24,9 +24,9 @@ export type TrackDefinition = {
 export const LEARNER_TRACKS: TrackDefinition[] = [
   {
     id: "bio",
-    title: "Biology",
-    subtitle: "Medicine, genetics, biotech, and life sciences",
-    targetRole: "Life Sciences / Biotech Intern",
+    title: "Biology / NEET",
+    subtitle: "NEET UG — chapter mocks, PYQ-style papers, and vigorous PCB prep",
+    targetRole: "NEET / MBBS aspirant",
     questions: [
       {
         id: "level",
@@ -119,6 +119,26 @@ export const LEARNER_TRACKS: TrackDefinition[] = [
           { value: "3", label: "About 3 hours" },
           { value: "6", label: "About 6 hours" },
           { value: "10", label: "10+ hours" },
+        ],
+      },
+      {
+        id: "phy_level",
+        prompt: "How is NEET Physics feeling right now?",
+        type: "choice",
+        options: [
+          { value: "strong", label: "Strong — I want speed" },
+          { value: "ok", label: "Okay — need more numericals" },
+          { value: "weak", label: "Weak — concepts are shaky" },
+        ],
+      },
+      {
+        id: "chem_level",
+        prompt: "How is NEET Chemistry feeling right now?",
+        type: "choice",
+        options: [
+          { value: "strong", label: "Strong" },
+          { value: "ok", label: "Mixed — organic is the issue" },
+          { value: "weak", label: "Weak — too many reactions" },
         ],
       },
       {
@@ -483,14 +503,14 @@ export function fallbackRoadmap(track: TrackDefinition, answers: Record<string, 
 
   const byTrack: Record<LearnerTrack, Roadmap["milestones"]> = {
     bio: [
-      week(1, "Core concepts reset", ["Map weak chapters", "Revise cell structure daily"], ["Khan Academy Biology", "NCERT class notes"], "A clean foundation makes later topics stick."),
-      week(2, "Physiology block", ["Human systems flashcards", "Label 4 diagrams from memory"], ["Teach Me Anatomy", "Amoeba Sisters"], "Physiology is high-yield for medicine and biotech."),
-      week(3, "Genetics & evolution", ["Punnett square drills", "Write one-page evolution timeline"], ["Crash Course Biology", "Your Genetics"], "These topics show up in boards, NEET, and research internships."),
-      week(4, "Ecology & application", ["Case study on a local ecosystem", "Practice assertion-reason questions"], ["NCERT exemplar", "National Geographic education"], "Application questions test whether you can use ideas, not just recall them."),
-      week(5, "Lab literacy", ["Virtual lab module", "Write a mini lab report"], ["PhET / virtual labs", "Lab safety primer"], "Internships expect you to follow a method, not only theory."),
-      week(6, "Project sprint", ["Pick a small research question", "Collect sources and a simple dataset"], ["Google Scholar", "iNaturalist"], "A short project is stronger than extra notes on a resume."),
-      week(7, "Exam / interview polish", ["Timed mixed quiz", "Explain 3 topics out loud"], ["Previous year papers", "Anki"], "Teaching a topic is the fastest way to find gaps."),
-      week(8, "Portfolio & next step", ["Write a one-page bio profile", "List 3 internships or labs to contact"], ["LinkedIn student guide", "University lab pages"], "A clear next action turns learning into opportunity."),
+      week(1, "NCERT sweep + error log", ["Finish weakest bio chapter", "30 Physics numericals", "Daily 20 organic reactions"], ["NCERT Biology", "HC Verma selected", "MS Chauhan GOC"], "NEET rewards line-by-line NCERT plus an error notebook."),
+      week(2, "Human physiology block", ["Diagrams from memory", "PYQ-style 10Q daily"], ["NEET PYQ chapter tests in the app"], "Physiology is high-yield and diagram-heavy."),
+      week(3, "Genetics + evolution grind", ["Punnett + pedigree drills", "Molecular basis flashcards"], ["App: Genetics chapter assessment"], "These chapters decide many 4-mark equivalent MCQs."),
+      week(4, "Physics mechanics + chem equilibrium", ["One sectional mock each", "Revise every wrong option"], ["App: Physics sectional — Mechanics"], "Sectionals build speed before full papers."),
+      week(5, "Full PCB mock #1", ["One 45-question mock", "Post-mortem the same day"], ["App: Full NEET mock #1"], "Stamina is a skill; sit the clock."),
+      week(6, "PYQ-style year paper", ["NEET 2023–2025 pattern papers", "Revisit NCERT lines you missed"], ["App: PYQ-style papers tab"], "Year mix trains you for surprise topics."),
+      week(7, "Rapid fire + weak chapter blitz", ["Two rapid tests/day", "Re-teach one chapter out loud"], ["App: Rapid fire"], "Active recall beats rereading."),
+      week(8, "Peak week", ["Two full mocks", "Sleep and revision only — no new books"], ["App: Full NEET mock #8"], "Rank comes from calm accuracy, not new material."),
     ],
     high_school: [
       week(1, "Study system", ["Build a weekly timetable", "Identify the weakest chapter"], ["Cornell notes method", "Pomodoro timer"], "A system beats last-minute cramming."),

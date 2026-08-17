@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { LEARNER_TRACKS, fallbackRoadmap, getTrack, type LearnerTrack } from "@/lib/onboarding-tracks";
+import { saveLocalProfile } from "@/lib/local-profile";
 import { seedPlannerEvents } from "@/lib/personalize";
 import { syncSession } from "@/lib/post-auth";
 import { cn } from "@/lib/utils";
@@ -82,16 +83,18 @@ function OnboardingFlow() {
     setSaving(true);
     setError("");
     try {
-      await syncSession(getIdToken, user.name);
       const skills =
         answers.known
           ?.split(",")
           .map((s) => s.trim())
           .filter(Boolean) ?? [];
       const plannerEvents = seedPlannerEvents(track.id, answers);
-
-      await api.updateMe({
+      const roadmap = fallbackRoadmap(track, answers);
+      const localProfile = {
+        uid: user.uid ?? user.email,
         name: user.name,
+        email: user.email,
+        degree: answers.level || answers.grade || answers.stream || track.title,
         learner_track: track.id,
         onboarding_answers: answers,
         onboarding_complete: true,
@@ -99,15 +102,51 @@ function OnboardingFlow() {
         skills,
         interests: [track.title, answers.focus, answers.stack, answers.curiosity, answers.hardest, answers.weak_subject]
           .filter(Boolean) as string[],
-        degree: answers.level || answers.grade || answers.stream || track.title,
         planner_events: plannerEvents,
-      });
+        projects: [] as string[],
+        certifications: [] as string[],
+        assessment: { questions_asked: 0, history: [], skills_estimate: {} },
+        roadmap,
+        resume: null,
+        internships: [],
+        interview: { history: [], score: null },
+        progress_log: [],
+      };
+      saveLocalProfile(localProfile, user.email);
 
-      try {
-        await api.generateRoadmap();
-      } catch {
-        await api.updateMe({ roadmap: fallbackRoadmap(track, answers) });
-      }
+      const token = await getIdToken();
+      if (token) api.setToken(token);
+
+      const payload = {
+        name: user.name,
+        learner_track: track.id,
+        onboarding_answers: answers,
+        onboarding_complete: true,
+        target_role: track.targetRole,
+        skills,
+        interests: localProfile.interests,
+        degree: localProfile.degree,
+        planner_events: plannerEvents,
+        roadmap,
+      };
+
+      void (async () => {
+        try {
+          await api.updateMe(payload);
+        } catch {
+          try {
+            await api.registerUser(user.name);
+            await api.updateMe(payload);
+          } catch {
+            /* local profile is enough to enter the app */
+          }
+        }
+        try {
+          await api.generateRoadmap();
+        } catch {
+          /* fallback roadmap already saved locally */
+        }
+      })();
 
       router.push("/roadmap");
     } catch (err) {

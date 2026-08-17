@@ -57,7 +57,7 @@ export function PlannerCopilot() {
           ...h,
           {
             role: "assistant",
-            content: plan.summary || "Here is a plan that fits what you told me. Confirm to add it to Planner.",
+            content: plan.summary || "Here is a plan that fits what you told me. Confirm to add it to your calendar.",
           },
         ]);
         if (plan.events?.length) {
@@ -85,7 +85,7 @@ export function PlannerCopilot() {
       updatePlanner([...career.plannerEvents, ...colored]);
       setHistory((h) => [
         ...h,
-        { role: "assistant", content: "Added to your planner. You can tweak times anytime on this page." },
+        { role: "assistant", content: "Added to your calendar. You can move or delete blocks on any day." },
       ]);
       setProposal(null);
     } catch (err) {
@@ -105,7 +105,7 @@ export function PlannerCopilot() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Sparkles className="h-5 w-5 text-accent" />
-          Ask Gemma for a planner
+          Ask Gemma for a calendar plan
         </CardTitle>
         <p className="text-sm text-muted">{hint}</p>
       </CardHeader>
@@ -149,7 +149,7 @@ export function PlannerCopilot() {
             </ul>
             <div className="mt-4 flex flex-wrap gap-2">
               <Button variant="accent" size="sm" disabled={loading} onClick={() => void confirm()}>
-                Confirm and add to planner
+                Confirm and add to calendar
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setProposal(null)}>
                 Not now

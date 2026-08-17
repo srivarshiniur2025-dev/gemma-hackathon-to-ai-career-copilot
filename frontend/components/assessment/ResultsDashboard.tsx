@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
+import { useCareerProfile } from "@/contexts/CareerProfileContext";
+import { showsMockInterviews, showsResumeBuilder } from "@/lib/learner-track";
 import type { AssessmentResults } from "@/lib/assessment-types";
 
 const SkillRadarChart = dynamic(
@@ -60,6 +62,9 @@ function ReadinessCard({
 }
 
 export function ResultsDashboard({ results }: ResultsDashboardProps) {
+  const { profile } = useCareerProfile();
+  const showInterview = showsMockInterviews(profile);
+  const showResume = showsResumeBuilder(profile);
   const radarData = Object.entries(results.skillsEstimate).map(([skill, score]) => ({
     skill: skill.length > 10 ? skill.slice(0, 8) + "…" : skill,
     score,
@@ -183,7 +188,11 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
         <h2 className="mb-4 font-heading text-lg font-bold">Career Readiness</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           <ReadinessCard label="Resume Readiness" value={results.resumeReadiness} icon={FileText} />
+        {showInterview ? (
           <ReadinessCard label="Interview Readiness" value={results.interviewReadiness} icon={Mic} />
+        ) : (
+          <ReadinessCard label="Mock stamina" value={results.interviewReadiness} icon={Target} />
+        )}
           <ReadinessCard label="Internship Readiness" value={results.internshipReadiness} icon={Briefcase} />
         </div>
       </div>
@@ -192,12 +201,24 @@ export function ResultsDashboard({ results }: ResultsDashboardProps) {
         <Link href="/roadmap" className={cn(buttonVariants({ variant: "accent" }))}>
           View Learning Roadmap
         </Link>
-        <Link href="/resume" className={cn(buttonVariants({ variant: "secondary" }))}>
-          Build Resume
-        </Link>
-        <Link href="/interview" className={cn(buttonVariants({ variant: "outline" }))}>
-          Practice Interview
-        </Link>
+        {showResume ? (
+          <Link href="/resume" className={cn(buttonVariants({ variant: "secondary" }))}>
+            Build Resume
+          </Link>
+        ) : (
+          <Link href="/planner" className={cn(buttonVariants({ variant: "secondary" }))}>
+            Open planner
+          </Link>
+        )}
+        {showInterview ? (
+          <Link href="/interview" className={cn(buttonVariants({ variant: "outline" }))}>
+            Practice Interview
+          </Link>
+        ) : (
+          <Link href="/mocks" className={cn(buttonVariants({ variant: "outline" }))}>
+            Next mock test
+          </Link>
+        )}
       </div>
     </motion.div>
   );

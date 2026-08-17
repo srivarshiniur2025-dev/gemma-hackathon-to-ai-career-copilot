@@ -4,6 +4,7 @@ import { MoreHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
+import { eventsOnDate, todayISO } from "@/lib/calendar";
 import { timelineHours } from "@/lib/dashboard-data";
 import type { TimelineEvent } from "@/lib/dashboard-data";
 
@@ -49,7 +50,8 @@ function TimelineEventCard({ event, index }: { event: TimelineEvent; index: numb
 
 export function LearningTimeline() {
   const { career } = useCareerProfile();
-  const eventsByHour = new Map(career.plannerEvents.map((e) => [e.startHour, e]));
+  const todayEvents = eventsOnDate(career.plannerEvents, todayISO());
+  const eventsByHour = new Map(todayEvents.map((e) => [e.startHour, e]));
 
   return (
     <motion.section
@@ -59,12 +61,12 @@ export function LearningTimeline() {
       className="flex-1 overflow-y-auto px-4 pb-6 sm:px-6"
     >
       <div className="mb-5 flex items-center justify-between gap-2">
-        <h2 className="text-lg font-bold text-foreground-heading">This Week&apos;s Career Plan</h2>
+        <h2 className="text-lg font-bold text-foreground-heading">Today&apos;s plan</h2>
         <Link
           href="/planner"
           className="text-xs font-medium text-accent hover:underline"
         >
-          Edit planner →
+          Open calendar →
         </Link>
       </div>
 
