@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquare, Settings } from "lucide-react";
+import { ClipboardCheck, MessageSquare, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
@@ -27,9 +27,15 @@ export function DashboardProfileHeader() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Link href="/assessment">
+        <Link href="/planner#copilot">
           <Button variant="outline" size="sm" className="gap-2 rounded-xl cursor-pointer">
             <MessageSquare className="h-4 w-4" />
+            <span className="hidden sm:inline">Ask Gemma</span>
+          </Button>
+        </Link>
+        <Link href="/assessment">
+          <Button variant="outline" size="sm" className="gap-2 rounded-xl cursor-pointer">
+            <ClipboardCheck className="h-4 w-4" />
             <span className="hidden sm:inline">Assess</span>
           </Button>
         </Link>

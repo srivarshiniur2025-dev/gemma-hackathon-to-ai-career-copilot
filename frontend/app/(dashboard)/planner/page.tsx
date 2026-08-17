@@ -4,6 +4,7 @@ import { CalendarDays, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { FadeIn } from "@/components/motion/FadeIn";
+import { PlannerCopilot } from "@/components/planner/PlannerCopilot";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,10 +100,14 @@ export default function PlannerPage() {
         </Card>
       </FadeIn>
 
+      <FadeIn delay={0.08}>
+        <PlannerCopilot />
+      </FadeIn>
+
       <FadeIn delay={0.1}>
         <Card className="border-dashed border-accent/30 bg-accent/5">
           <CardContent className="p-5 text-sm text-muted">
-            Gemma builds your planner from your roadmap and assessment gaps. Complete an assessment or generate a roadmap for smarter suggestions.
+            Chat with Gemma about free time and difficulties. Confirm a plan to add those blocks here and on the dashboard timeline.
           </CardContent>
         </Card>
       </FadeIn>

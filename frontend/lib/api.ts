@@ -180,4 +180,38 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ message, history }),
     }),
+
+  recommendPlanner: (message: string, history: { role: string; content: string }[] = []) =>
+    request<{
+      needs_more?: boolean;
+      question?: string;
+      summary: string;
+      events: {
+        title: string;
+        startTime: string;
+        endTime: string;
+        startHour: number;
+        durationHours: number;
+        why?: string;
+      }[];
+    }>("/api/planner/recommend", {
+      method: "POST",
+      body: JSON.stringify({ message, history }),
+    }),
+
+  confirmPlanner: (
+    events: {
+      title: string;
+      startTime: string;
+      endTime: string;
+      startHour: number;
+      durationHours: number;
+      why?: string;
+    }[],
+    replace = false
+  ) =>
+    request<{ planner_events: unknown[] }>("/api/planner/confirm", {
+      method: "POST",
+      body: JSON.stringify({ events, replace }),
+    }),
 };

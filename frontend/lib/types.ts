@@ -3,6 +3,22 @@ export type Profile = {
   name: string;
   email: string;
   degree: string;
+  institution?: string;
+  learner_track?: string;
+  onboarding_answers?: Record<string, string>;
+  onboarding_complete?: boolean;
+  planner_events?: {
+    id?: string;
+    title: string;
+    startTime: string;
+    endTime: string;
+    startHour: number;
+    durationHours: number;
+    color?: string;
+    dotColor?: string;
+    bgColor?: string;
+    why?: string;
+  }[];
   interests: string[];
   target_role: string;
   skills: string[];

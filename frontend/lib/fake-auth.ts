@@ -11,6 +11,7 @@ export type StoredUser = {
 };
 
 export type SessionUser = {
+  uid?: string;
   name: string;
   email: string;
   college: string;
@@ -44,7 +45,7 @@ export function seedDemoUser(force = false): void {
 
 export type RegisterInput = {
   name: string;
-  college: string;
+  college?: string;
   email: string;
   password: string;
 };
@@ -105,12 +106,11 @@ export function validatePassword(password: string): boolean {
 
 export function register(input: RegisterInput): { success: true } | { success: false; error: string } {
   const name = input.name.trim();
-  const college = input.college.trim();
+  const college = (input.college ?? "").trim();
   const email = input.email.trim().toLowerCase();
   const password = input.password;
 
   if (!name) return { success: false, error: "Full name is required" };
-  if (!college) return { success: false, error: "College is required" };
   if (!email) return { success: false, error: "Email is required" };
   if (!validateEmail(email)) return { success: false, error: "Enter a valid email address" };
   if (!validatePassword(password)) return { success: false, error: "Password must be at least 8 characters" };
@@ -137,6 +137,7 @@ export function login(
   }
 
   const sessionUser: SessionUser = {
+    uid: stored.email,
     name: stored.name,
     email: stored.email,
     college: stored.college,

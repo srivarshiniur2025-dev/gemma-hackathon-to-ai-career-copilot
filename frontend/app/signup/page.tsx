@@ -21,12 +21,12 @@ import {
 } from "@/components/auth/AuthLayout";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { firebaseAuthErrorMessage, useAuth } from "@/contexts/AuthContext";
 import { validateEmail, validatePassword } from "@/lib/fake-auth";
+import { resolvePostAuthPath } from "@/lib/post-auth";
 
 type FieldErrors = {
   name?: string;
-  college?: string;
   email?: string;
   password?: string;
   confirm?: string;
@@ -34,12 +34,11 @@ type FieldErrors = {
 };
 
 export default function SignupPage() {
-  const { register, user, loading: authLoading } = useAuth();
+  const { register, loginWithGoogle, user, loading: authLoading, getIdToken, firebaseEnabled } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [form, setForm] = useState({
     name: "",
-    college: "",
     email: "",
     password: "",
     confirm: "",
@@ -47,12 +46,15 @@ export default function SignupPage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && user) {
-      router.replace("/dashboard");
-    }
-  }, [authLoading, user, router]);
+    if (authLoading || !user || redirecting) return;
+    setRedirecting(true);
+    void resolvePostAuthPath(getIdToken, user.name)
+      .then((path) => router.replace(path))
+      .catch(() => router.replace("/onboarding"));
+  }, [authLoading, user, redirecting, getIdToken, router]);
 
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -62,7 +64,6 @@ export default function SignupPage() {
   function validate(): boolean {
     const next: FieldErrors = {};
     if (!form.name.trim()) next.name = "Full name is required";
-    if (!form.college.trim()) next.college = "College is required";
     if (!form.email.trim()) next.email = "Email is required";
     else if (!validateEmail(form.email)) next.email = "Enter a valid email address";
     if (!form.password) next.password = "Password is required";
@@ -82,14 +83,26 @@ export default function SignupPage() {
     try {
       await register({
         name: form.name.trim(),
-        college: form.college.trim(),
         email: form.email.trim(),
         password: form.password,
       });
-      toast("Account created! Please sign in.", "success");
-      router.push("/login");
+      if (!firebaseEnabled) {
+        toast("Account created! Please sign in.", "success");
+        router.push("/login");
+      }
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Registration failed", "error");
+      toast(firebaseAuthErrorMessage(err), "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogle() {
+    setLoading(true);
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      toast(firebaseAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -127,7 +140,11 @@ export default function SignupPage() {
               <CardTitle className="text-2xl" style={{ fontFamily: "var(--font-sora, var(--font-sans))" }}>
                 Create your account
               </CardTitle>
-              <CardDescription>Start your AI-powered career journey</CardDescription>
+              <CardDescription>
+                {firebaseEnabled
+                  ? "Sign up with Firebase. Next, we will build a learning path just for you."
+                  : "Demo mode — add Firebase keys to go live."}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -142,19 +159,6 @@ export default function SignupPage() {
                     aria-invalid={Boolean(errors.name)}
                   />
                   <AuthFieldError message={errors.name} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="college">College</Label>
-                  <Input
-                    id="college"
-                    value={form.college}
-                    onChange={(e) => update("college", e.target.value)}
-                    placeholder="IIT Delhi"
-                    className="transition-all duration-200 focus-visible:border-accent focus-visible:ring-accent/20"
-                    aria-invalid={Boolean(errors.college)}
-                  />
-                  <AuthFieldError message={errors.college} />
                 </div>
 
                 <div className="space-y-2">
@@ -207,13 +211,7 @@ export default function SignupPage() {
                   label={
                     <>
                       I agree to the{" "}
-                      <button
-                        type="button"
-                        className="font-semibold text-accent hover:underline"
-                        onClick={() => toast("Terms & Privacy — demo placeholder")}
-                      >
-                        Terms & Privacy Policy
-                      </button>
+                      <span className="font-semibold text-accent">Terms & Privacy Policy</span>
                     </>
                   }
                   error={errors.terms}
@@ -245,7 +243,16 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <GoogleButton label="Sign up with Google" />
+              <GoogleButton
+                label="Sign up with Google"
+                onClick={() => void handleGoogle()}
+                disabled={loading}
+              />
+              {!firebaseEnabled && (
+                <p className="mt-2 text-center text-xs text-muted">
+                  Google sign-up needs Firebase keys in <code>frontend/.env.local</code>. Email signup still works in demo mode.
+                </p>
+              )}
 
               <p className="mt-6 text-center text-sm text-muted">
                 Already have an account? <AuthLink href="/login">Sign in</AuthLink>

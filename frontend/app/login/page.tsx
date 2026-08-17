@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
-import { ensureBackendProfile } from "@/components/AuthSync";
 import {
   AuthFieldError,
   AuthLink,
@@ -22,8 +21,9 @@ import {
 } from "@/components/auth/AuthLayout";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { DEMO_USER, getCurrentUser, seedDemoUser, validateEmail } from "@/lib/fake-auth";
+import { firebaseAuthErrorMessage, useAuth } from "@/contexts/AuthContext";
+import { DEMO_USER, seedDemoUser, validateEmail } from "@/lib/fake-auth";
+import { resolvePostAuthPath } from "@/lib/post-auth";
 
 type FieldErrors = {
   email?: string;
@@ -31,20 +31,24 @@ type FieldErrors = {
 };
 
 export default function LoginPage() {
-  const { login, user, loading: authLoading } = useAuth();
+  const { login, loginWithGoogle, resetPassword, user, loading: authLoading, getIdToken, firebaseEnabled } =
+    useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && user) {
-      router.replace("/dashboard");
-    }
-  }, [authLoading, user, router]);
+    if (authLoading || !user || redirecting) return;
+    setRedirecting(true);
+    void resolvePostAuthPath(getIdToken, user.name)
+      .then((path) => router.replace(path))
+      .catch(() => router.replace("/onboarding"));
+  }, [authLoading, user, redirecting, getIdToken, router]);
 
   function validate(): boolean {
     const next: FieldErrors = {};
@@ -57,15 +61,10 @@ export default function LoginPage() {
 
   async function performLogin(loginEmail: string, loginPassword: string, remember: boolean) {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-
     try {
       await login({ email: loginEmail, password: loginPassword, rememberMe: remember });
-      const current = getCurrentUser();
-      await ensureBackendProfile(current?.name || "Student");
-      router.push("/dashboard");
-    } catch {
-      toast("Invalid email or password", "error");
+    } catch (err) {
+      toast(firebaseAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);
     }
@@ -75,6 +74,30 @@ export default function LoginPage() {
     e.preventDefault();
     if (!validate()) return;
     await performLogin(email, password, rememberMe);
+  }
+
+  async function handleGoogle() {
+    setLoading(true);
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      toast(firebaseAuthErrorMessage(err), "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleForgot() {
+    if (!email.trim() || !validateEmail(email)) {
+      setErrors((prev) => ({ ...prev, email: "Enter your email to reset the password" }));
+      return;
+    }
+    try {
+      await resetPassword(email);
+      toast("Password reset email sent", "success");
+    } catch (err) {
+      toast(firebaseAuthErrorMessage(err), "error");
+    }
   }
 
   async function handleDemoLogin() {
@@ -117,7 +140,11 @@ export default function LoginPage() {
               <CardTitle className="text-2xl" style={{ fontFamily: "var(--font-sora, var(--font-sans))" }}>
                 Welcome Back
               </CardTitle>
-              <CardDescription>Sign in to continue your AI-powered career journey.</CardDescription>
+              <CardDescription>
+                {firebaseEnabled
+                  ? "Sign in with Firebase to continue your career journey."
+                  : "Demo mode — add Firebase keys to go live. You can still sign in locally."}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -144,7 +171,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       className="cursor-pointer text-xs text-accent transition-colors hover:underline"
-                      onClick={() => toast("Password reset is not available in demo mode")}
+                      onClick={() => void handleForgot()}
                     >
                       Forgot password?
                     </button>
@@ -195,17 +222,28 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <GoogleButton label="Sign in with Google" />
-
-              <Button
-                type="button"
-                variant="outline"
-                className="mt-3 w-full transition-transform duration-200 hover:scale-[1.01]"
+              <GoogleButton
+                label="Sign in with Google"
+                onClick={() => void handleGoogle()}
                 disabled={loading}
-                onClick={handleDemoLogin}
-              >
-                Use demo account
-              </Button>
+              />
+              {!firebaseEnabled && (
+                <p className="mt-2 text-center text-xs text-muted">
+                  Google sign-in needs Firebase keys in <code>frontend/.env.local</code>.
+                </p>
+              )}
+
+              {!firebaseEnabled && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 w-full transition-transform duration-200 hover:scale-[1.01]"
+                  disabled={loading}
+                  onClick={handleDemoLogin}
+                >
+                  Use demo account
+                </Button>
+              )}
 
               <p className="mt-6 text-center text-sm text-muted">
                 Don&apos;t have an account? <AuthLink href="/signup">Register</AuthLink>

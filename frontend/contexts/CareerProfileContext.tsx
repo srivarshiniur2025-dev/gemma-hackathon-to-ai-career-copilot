@@ -21,6 +21,7 @@ import {
   recordDailyActivity,
   saveCareerData,
 } from "@/lib/career-store";
+import { applyOnboardingToCareer } from "@/lib/personalize";
 import type { Profile } from "@/lib/types";
 
 type CareerProfileContextValue = {
@@ -50,37 +51,41 @@ function initialsFromName(name: string): string {
 }
 
 function mergeProfileIntoCareer(career: CareerData, profile: Profile): CareerData {
+  const personalized = applyOnboardingToCareer(career, profile);
   const estimate = profile.assessment?.skills_estimate ?? {};
   const skillLevels = Object.keys(estimate).length
     ? Object.entries(estimate).map(([name, val]) => {
         const level = levelFromLabel(val);
         return { name, level, label: labelFromLevel(level) };
       })
-    : career.skillLevels;
+    : personalized.skillLevels;
 
   return {
-    ...career,
-    targetRole: profile.target_role || career.targetRole,
-    degree: profile.degree || career.degree,
-    skills: profile.skills?.length ? profile.skills : career.skills,
-    skillLevels: skillLevels.length ? skillLevels : career.skillLevels,
+    ...personalized,
+    targetRole: profile.target_role || personalized.targetRole,
+    skills: profile.skills?.length ? profile.skills : personalized.skills,
+    skillLevels: skillLevels.length ? skillLevels : personalized.skillLevels,
     assessmentCount: profile.assessment?.questions_asked
-      ? Math.max(career.assessmentCount, 1)
-      : career.assessmentCount,
-    strengths: profile.assessment?.strengths ?? career.strengths,
-    weaknesses: profile.assessment?.weaknesses ?? career.weaknesses,
-    assessmentSummary: profile.assessment?.summary ?? career.assessmentSummary,
-    resumeVersions: profile.resume ? Math.max(career.resumeVersions, 1) : career.resumeVersions,
-    projectCount: profile.projects?.length ?? career.projectCount,
-    interviewScore: profile.interview?.score ?? career.interviewScore,
-    internshipMatches: profile.internships?.length ?? career.internshipMatches,
-    resumeAtsScore: profile.resume?.tailoring?.match_score ?? career.resumeAtsScore,
+      ? Math.max(personalized.assessmentCount, 1)
+      : personalized.assessmentCount,
+    strengths: profile.assessment?.strengths?.length
+      ? profile.assessment.strengths
+      : personalized.strengths,
+    weaknesses: profile.assessment?.weaknesses?.length
+      ? profile.assessment.weaknesses
+      : personalized.weaknesses,
+    assessmentSummary: profile.assessment?.summary ?? personalized.assessmentSummary,
+    resumeVersions: profile.resume ? Math.max(personalized.resumeVersions, 1) : personalized.resumeVersions,
+    projectCount: profile.projects?.length ?? personalized.projectCount,
+    interviewScore: profile.interview?.score ?? personalized.interviewScore,
+    internshipMatches: profile.internships?.length ?? personalized.internshipMatches,
+    resumeAtsScore: profile.resume?.tailoring?.match_score ?? personalized.resumeAtsScore,
     roadmapDaysRemaining: profile.roadmap?.milestones?.length
       ? profile.roadmap.milestones.length * 7
-      : career.roadmapDaysRemaining,
+      : personalized.roadmapDaysRemaining,
     recommendedSkills:
       profile.roadmap?.priority_skills?.map((p) => p.skill).slice(0, 5) ??
-      career.recommendedSkills,
+      personalized.recommendedSkills,
   };
 }
 
@@ -109,6 +114,7 @@ export function CareerProfileProvider({ children }: { children: React.ReactNode 
       const next = { ...loadCareerData(user?.email), plannerEvents: events };
       saveCareerData(next, user?.email);
       setCareer(next);
+      void api.updateMe({ planner_events: events }).catch(() => undefined);
     },
     [user?.email]
   );
@@ -125,7 +131,12 @@ export function CareerProfileProvider({ children }: { children: React.ReactNode 
       try {
         const token = await getIdToken();
         if (token) api.setToken(token);
-        const p = await api.getMe();
+        let p: Profile;
+        try {
+          p = await api.getMe();
+        } catch {
+          p = await api.registerUser(user.name);
+        }
         mergeFromProfile(p);
       } catch {
         const local = loadCareerData(user.email);

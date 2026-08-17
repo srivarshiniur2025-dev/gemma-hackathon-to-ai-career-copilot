@@ -5,8 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 
 /**
- * Keeps API bearer token in sync with auth state.
- * Uses demo token for fake auth — replace with Firebase getIdToken() when migrating.
+ * Keeps API bearer token in sync with auth state (Firebase ID token when configured).
  */
 export function AuthSync() {
   const { user, getIdToken } = useAuth();

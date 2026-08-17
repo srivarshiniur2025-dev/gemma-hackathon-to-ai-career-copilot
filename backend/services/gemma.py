@@ -13,7 +13,6 @@ from google.genai import errors as genai_errors
 from google.genai import types
 
 from backend.config import settings
-from backend.services.internship_spam_check import extract_contact_email
 from backend.prompts import assessment as assessment_prompts
 from backend.prompts import chat as chat_prompts
 from backend.prompts import internships as internships_prompts
@@ -299,6 +298,8 @@ def search_internships_on_web(
     skills: list[str] | None = None,
 ) -> list[dict]:
     """Use Gemma 4 + Google Search grounding to find real internships on the internet."""
+    from backend.services.internship_spam_check import extract_contact_email
+
     user = internships_prompts.gemma_web_search_prompt(query, location, skills)
     try:
         raw = gemma_service.generate_json(
@@ -405,10 +406,13 @@ def chat_with_career_copilot(
     if profile:
         context = f"""Student context:
 Name: {profile.get('name')}
+Track: {profile.get('learner_track')}
 Target role: {profile.get('target_role')}
+Onboarding answers: {profile.get('onboarding_answers', {})}
 Skills: {profile.get('skills', [])}
 Assessment: {profile.get('assessment', {}).get('summary', 'Not completed')}
 
+If they mention free time or study difficulties, help them think in weekly blocks and suggest opening Planner to confirm a Gemma plan.
 """
     transcript = ""
     if history:
@@ -429,10 +433,13 @@ async def stream_chat_with_career_copilot(
     if profile:
         context = f"""Student context:
 Name: {profile.get('name')}
+Track: {profile.get('learner_track')}
 Target role: {profile.get('target_role')}
+Onboarding answers: {profile.get('onboarding_answers', {})}
 Skills: {profile.get('skills', [])}
 Assessment: {profile.get('assessment', {}).get('summary', 'Not completed')}
 
+If they mention free time or study difficulties, help them think in weekly blocks and suggest opening Planner to confirm a Gemma plan.
 """
     transcript = ""
     if history:

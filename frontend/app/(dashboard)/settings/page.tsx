@@ -41,7 +41,7 @@ export default function SettingsPage() {
       <Card>
         <CardHeader><CardTitle>Privacy</CardTitle></CardHeader>
         <CardContent>
-          <p className="text-sm text-muted mb-4">Your profile data is stored locally for this demo.</p>
+          <p className="text-sm text-muted mb-4">Your profile is stored with Firebase Auth and the Career Copilot backend.</p>
           <Button variant="destructive">Delete Account</Button>
         </CardContent>
       </Card>
