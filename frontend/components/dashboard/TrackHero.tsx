@@ -7,6 +7,7 @@ import { ArrowRight, BookOpen, Flame, Sparkles } from "lucide-react";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { CATALOG_COUNTS } from "@/lib/neet/catalog";
 import { loadMockProgress, mockStats } from "@/lib/neet/progress";
+import { loadSkillProgress, skillStats } from "@/lib/skills/progress";
 import { dashboardHeading, experienceForProfile } from "@/lib/learner-track";
 import { Button } from "@/components/ui/button";
 
@@ -16,20 +17,28 @@ export function TrackHero() {
   const first = displayName.split(" ")[0];
   const [completed, setCompleted] = useState(0);
   const [pyq, setPyq] = useState(0);
+  const [skillCompleted, setSkillCompleted] = useState(0);
+  const [skillAvg, setSkillAvg] = useState(0);
 
   useEffect(() => {
+    if (exp === "developer") {
+      const stats = skillStats(loadSkillProgress());
+      setSkillCompleted(stats.completed);
+      setSkillAvg(stats.avg);
+      return;
+    }
     const stats = mockStats(loadMockProgress());
     setCompleted(stats.completed);
     setPyq(stats.pyqAccuracy);
-  }, []);
+  }, [exp]);
 
   const copy =
     exp === "developer"
       ? {
           line: `Ship something today, ${first}.`,
-          sub: "Internships and mock interviews are your loop — Gemma on the mic, GitHub as proof.",
-          cta: "Start mock interview",
-          href: "/interview",
+          sub: "Skill tests feed Gemma internship matching — then mock interviews and your resume loop.",
+          cta: "Take a skill test",
+          href: "/assessment",
         }
       : exp === "school"
         ? {
@@ -51,9 +60,9 @@ export function TrackHero() {
   const pills =
     exp === "developer"
       ? [
+          { label: "Skill tests", value: `${skillCompleted}`, icon: Sparkles },
+          { label: "Avg score", value: skillAvg ? `${skillAvg}%` : "—", icon: BookOpen },
           { label: "Streak", value: `${career.streak.count}d`, icon: Flame },
-          { label: "Projects", value: `${career.projectCount}`, icon: Sparkles },
-          { label: "ATS", value: `${career.resumeAtsScore}%`, icon: BookOpen },
         ]
       : [
           { label: "Mocks", value: `${completed}`, icon: Sparkles },

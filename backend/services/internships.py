@@ -11,8 +11,58 @@ from backend.services.internship_spam_check import check_internship_spam_async
 from backend.services.job_fetcher import fetch_internships
 from backend.utils.link_validator import filter_valid_postings
 
+DOMAIN_LABELS = {
+    "python": "Python",
+    "javascript": "JavaScript",
+    "dsa": "Data structures & algorithms",
+    "sql": "SQL",
+    "react": "React",
+    "system-design": "System design",
+    "git": "Git",
+    "ml": "Machine learning",
+    "Overall": "Overall",
+}
+
+
+def _normalize_scores(raw: dict) -> dict[str, int]:
+    scored: dict[str, int] = {}
+    for key, value in (raw or {}).items():
+        if isinstance(value, bool):
+            continue
+        try:
+            scored[str(key)] = max(0, min(100, int(value)))
+        except (TypeError, ValueError):
+            continue
+    return scored
+
+
+def _skill_builder_profile(profile: dict) -> dict:
+    assessment = profile.get("assessment") or {}
+    scored = _normalize_scores(assessment.get("skills_estimate") or {})
+    strengths = list(assessment.get("strengths") or [])
+    weaknesses = list(assessment.get("weaknesses") or [])
+    summary = str(assessment.get("summary") or "").strip()
+    labeled = {
+        DOMAIN_LABELS.get(k, k.replace("-", " ").title()): v for k, v in sorted(scored.items(), key=lambda x: x[1], reverse=True)
+    }
+    return {
+        "skills_estimate": scored,
+        "labeled_scores": labeled,
+        "strengths": strengths,
+        "weaknesses": weaknesses,
+        "summary": summary,
+    }
+
 
 def _profile_search_query(profile: dict) -> str:
+    skill_data = _skill_builder_profile(profile)
+    scored = skill_data["skills_estimate"]
+    if scored:
+        top = sorted(scored.items(), key=lambda x: x[1], reverse=True)[:3]
+        top_names = [DOMAIN_LABELS.get(k, k.replace("-", " ")) for k, v in top if v >= 45]
+        if top_names:
+            return f"{' '.join(top_names)} intern"
+
     target = (profile.get("target_role") or "").strip()
     if target:
         return target
@@ -23,31 +73,68 @@ def _profile_search_query(profile: dict) -> str:
 
 
 def _profile_skills(profile: dict) -> list[str]:
-    skills = list(profile.get("skills") or [])
-    assessment = profile.get("assessment") or {}
-    estimate = assessment.get("skills_estimate") or {}
-    for skill in estimate:
-        if skill not in skills:
+    skill_data = _skill_builder_profile(profile)
+    scored = skill_data["skills_estimate"]
+    skills: list[str] = []
+
+    for name, score in sorted(scored.items(), key=lambda x: x[1], reverse=True):
+        label = DOMAIN_LABELS.get(name, name.replace("-", " ").title())
+        if score >= 40 and label not in skills:
+            skills.append(label)
+
+    for skill in profile.get("skills") or []:
+        if skill and skill not in skills:
             skills.append(skill)
+
     roadmap = profile.get("roadmap") or {}
     for item in roadmap.get("priority_skills") or []:
         if isinstance(item, dict):
             skill = item.get("skill")
             if skill and skill not in skills:
                 skills.append(skill)
+
     return skills[:12]
 
 
-async def recommend_internships(uid: str) -> dict:
+def _merge_skill_sync(profile: dict, skill_sync: dict | None) -> dict:
+    if not skill_sync:
+        return profile
+
+    assessment = dict(profile.get("assessment") or {})
+    if skill_sync.get("skills_estimate") is not None:
+        assessment["skills_estimate"] = _normalize_scores(skill_sync["skills_estimate"])
+    if skill_sync.get("strengths") is not None:
+        assessment["strengths"] = skill_sync["strengths"]
+    if skill_sync.get("weaknesses") is not None:
+        assessment["weaknesses"] = skill_sync["weaknesses"]
+    if skill_sync.get("summary") is not None:
+        assessment["summary"] = skill_sync["summary"]
+
+    return {**profile, "assessment": assessment}
+
+
+async def recommend_internships(uid: str, skill_sync: dict | None = None, force_refresh: bool = False) -> dict:
     profile = await user_repo.get_user_by_uid(uid)
     if not profile:
         raise ValueError("Profile not found")
 
-    cached = await search_cache_repo.get_cached_recommend(uid)
-    if cached is not None:
-        return {**cached, "cached": True}
+    profile = _merge_skill_sync(profile, skill_sync)
+    if skill_sync:
+        await user_repo.patch_user_field(uid, "assessment", profile.get("assessment") or {})
+        await search_cache_repo.clear_cached_recommend(uid)
+
+    if not force_refresh:
+        cached = await search_cache_repo.get_cached_recommend(uid)
+        if cached is not None:
+            skill_data = _skill_builder_profile(profile)
+            return {
+                **cached,
+                "cached": True,
+                "skill_profile_used": skill_data,
+            }
 
     assessment = profile.get("assessment") or {}
+    skill_data = _skill_builder_profile(profile)
     query = _profile_search_query(profile)
     skills = _profile_skills(profile)
 
@@ -56,12 +143,13 @@ async def recommend_internships(uid: str) -> dict:
         return {
             "recommendations": [],
             "overall_advice": (
-                "No live internships found for your profile. Try broadening your target role. "
-                "Add SERPAPI_KEY for Google Jobs (LinkedIn, Indeed, etc.) or Adzuna keys in .env."
+                "No live internships found for your skill profile. Complete more skill builder tests "
+                "or broaden your target role. Add SERPAPI_KEY for Google Jobs or Adzuna keys in .env."
             ),
             "source": None,
             "cached": False,
             "message": "No postings found.",
+            "skill_profile_used": skill_data,
         }
 
     postings = await filter_valid_postings(postings)
@@ -72,6 +160,7 @@ async def recommend_internships(uid: str) -> dict:
             "source": source,
             "cached": False,
             "message": "Link validation failed for all postings.",
+            "skill_profile_used": skill_data,
         }
 
     scam_results = await asyncio.gather(*[check_scam(p) for p in postings])
@@ -87,6 +176,7 @@ async def recommend_internships(uid: str) -> dict:
             "source": source,
             "cached": False,
             "message": "No safe postings after scam screening.",
+            "skill_profile_used": skill_data,
         }
 
     safe_postings = [p for p, _ in safe_pairs]
@@ -135,6 +225,7 @@ async def recommend_internships(uid: str) -> dict:
         "source": source,
         "cached": False,
         "message": None,
+        "skill_profile_used": skill_data,
     }
 
     if recommendations:

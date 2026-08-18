@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { GEMMA_BADGE_LABEL } from "@/lib/gemma";
+import logoCareerCopilot from "../../public/logo-career-copilot.png";
 
 type LogoProps = {
   className?: string;
@@ -146,10 +147,11 @@ export function Logo({
     return (
       <div className={cn("shrink-0", className)}>
         <Image
-          src="/logo-career-copilot.png"
+          src={logoCareerCopilot}
           alt="AI Career Copilot — Assess · Learn · Build · Achieve"
           width={logoWidth}
           height={logoHeight}
+          unoptimized
           className={cn("h-auto w-auto object-contain object-left", iconClassName)}
           style={{ height: logoHeight, width: logoWidth }}
           priority={size === "md"}

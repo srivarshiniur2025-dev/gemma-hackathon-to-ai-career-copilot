@@ -9,7 +9,7 @@ import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { experienceForProfile } from "@/lib/learner-track";
+import { experienceForProfile, trackCopy } from "@/lib/learner-track";
 import {
   addDaysISO,
   eventsOnDate,
@@ -26,10 +26,7 @@ const PRESET_COLORS = [
 ];
 
 function defaultTitle(exp: ReturnType<typeof experienceForProfile>) {
-  if (exp === "neet") return "NEET study block";
-  if (exp === "school") return "Chapter practice";
-  if (exp === "high_school") return "Board revision";
-  return "Build session";
+  return trackCopy(exp).defaultBlockTitle;
 }
 
 function hourLabel(hour: number) {
@@ -41,6 +38,7 @@ function hourLabel(hour: number) {
 export default function PlannerPage() {
   const { career, updatePlanner, displayName, profile } = useCareerProfile();
   const exp = experienceForProfile(profile);
+  const copy = trackCopy(exp);
   const today = todayISO();
   const now = useMemo(() => new Date(), []);
   const [month, setMonth] = useState({ year: now.getFullYear(), month: now.getMonth() });
@@ -73,11 +71,12 @@ export default function PlannerPage() {
 
   function seedWeek() {
     const palette = PRESET_COLORS;
-    const blocks = [0, 1, 2, 3, 4].map((i) => {
+    const titles = copy.seedWeekTitles;
+    const blocks = titles.map((title, i) => {
       const colors = palette[i % palette.length];
       return {
         id: `week-${Date.now()}-${i}`,
-        title: defaultTitle(exp),
+        title,
         startTime: hourLabel(18),
         endTime: hourLabel(19),
         startHour: 18,
@@ -94,14 +93,8 @@ export default function PlannerPage() {
       <FadeIn>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-foreground-heading">Calendar</h1>
-            <p className="mt-1 text-muted">
-              {exp === "neet"
-                ? `Study, chapter tests, and mocks for ${displayName.split(" ")[0]} — every track gets a calendar.`
-                : exp === "school"
-                  ? `Practice slots for ${displayName.split(" ")[0]}. Tap a day, add a block.`
-                  : `Your week on a real calendar, ${displayName.split(" ")[0]}.`}
-            </p>
+            <h1 className="text-2xl font-extrabold text-foreground-heading">{copy.plannerTitle}</h1>
+            <p className="mt-1 text-muted">{copy.plannerSubtitle}</p>
           </div>
           <Button variant="outline" size="sm" onClick={seedWeek} className="rounded-xl cursor-pointer">
             Fill this week

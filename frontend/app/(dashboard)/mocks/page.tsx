@@ -17,7 +17,8 @@ function MocksInner() {
   }, [loading, profile, router]);
 
   if (!showsExamMocks(profile)) return null;
-  return <MockCatalog audience={exp === "school" ? "school" : "neet"} />;
+  // `high_school` should use the "school" (Class 9–10) question set in our catalog.
+  return <MockCatalog audience={exp === "neet" ? "neet" : "school"} experience={exp} />;
 }
 
 export default function MocksPage() {

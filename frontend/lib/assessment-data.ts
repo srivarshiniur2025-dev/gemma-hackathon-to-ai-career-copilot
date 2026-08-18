@@ -142,12 +142,44 @@ export function buildMockEvaluation(
 export function buildEvaluationFromFeedback(
   feedback: string,
   answer: string,
-  question: AssessmentQuestion
+  question: AssessmentQuestion,
+  api?: {
+    score?: number;
+    is_correct?: boolean;
+    better_answer?: string;
+    industry_standard?: string;
+    suggestions?: string[];
+  }
 ): EvaluationResult {
-  const mock = buildMockEvaluation(answer, question);
+  const trimmed = answer.trim();
+  const hasContent = trimmed.length > 20;
+  const score =
+    typeof api?.score === "number"
+      ? Math.max(0, Math.min(100, Math.round(api.score)))
+      : hasContent
+        ? Math.floor(45 + Math.min(trimmed.length, 400) / 8)
+        : 15;
+  const isCorrect = api?.is_correct ?? score >= 70;
+
   return {
-    ...mock,
-    explanation: feedback || mock.explanation,
+    correctness: score,
+    isCorrect,
+    score,
+    explanation: feedback || `Gemma evaluated your ${question.domain} response.`,
+    betterAnswer:
+      api?.better_answer ||
+      MOCK_BETTER_ANSWERS[question.id % MOCK_BETTER_ANSWERS.length],
+    industryStandard:
+      api?.industry_standard ||
+      MOCK_INDUSTRY_ANSWERS[question.id % MOCK_INDUSTRY_ANSWERS.length],
+    suggestions:
+      api?.suggestions?.length
+        ? api.suggestions
+        : [
+            `Review ${question.domain} fundamentals in ${question.category}.`,
+            "Practice explaining trade-offs clearly in under 3 minutes.",
+            isCorrect ? "Try a harder follow-up on system design." : "Write a minimal working example and test edge cases.",
+          ],
   };
 }
 

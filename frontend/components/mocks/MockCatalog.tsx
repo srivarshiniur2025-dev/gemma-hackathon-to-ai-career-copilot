@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { BookOpen, CheckCircle2, Clock, Filter, Flame, Sparkles } from "lucide-react";
 import { catalogForAudience, CATALOG_COUNTS } from "@/lib/neet/catalog";
 import { loadMockProgress } from "@/lib/neet/progress";
+import type { TrackExperience } from "@/lib/learner-track";
+import { trackCopy } from "@/lib/learner-track";
 import type { Audience, ExamSubject, MockKind, MockTestMeta } from "@/lib/neet/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -33,8 +35,9 @@ function subjectLabel(subject: ExamSubject) {
   return subject[0].toUpperCase() + subject.slice(1);
 }
 
-export function MockCatalog({ audience }: { audience: Audience }) {
+export function MockCatalog({ audience, experience }: { audience: Audience; experience: TrackExperience }) {
   const params = useSearchParams();
+  const copy = trackCopy(experience);
   const initialTab = (params.get("tab") as (typeof TABS)[number]["id"]) || "all";
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>(
     TABS.some((t) => t.id === initialTab) ? initialTab : "all"
@@ -59,16 +62,12 @@ export function MockCatalog({ audience }: { audience: Audience }) {
       <div className="overflow-hidden rounded-[28px] border border-accent/15 bg-gradient-to-br from-white via-[#F0FDFA] to-white p-6 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
-              {audience === "school" ? "Class 9–10 practice" : "NEET vigorous prep"}
-            </p>
-            <h1 className="mt-2 font-heading text-3xl font-bold text-foreground-heading">
-              {audience === "school" ? "Chapter assessments" : "Mocks, PYQs & chapter tests"}
-            </h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">{copy.mocksEyebrow}</p>
+            <h1 className="mt-2 font-heading text-3xl font-bold text-foreground-heading">{copy.mocksTitle}</h1>
             <p className="mt-2 max-w-2xl text-sm text-muted">
-              {audience === "school"
-                ? "Short chapter quizzes that feel like a game — explanations after every paper."
-                : `${CATALOG_COUNTS.neet} timed papers across Physics, Chemistry and Biology. Questions follow NEET year-wise topic mix (original items, not scanned NTA PDFs).`}
+              {experience === "neet"
+                ? `${CATALOG_COUNTS.neet} timed papers across Physics, Chemistry and Biology. ${copy.mocksDescription}`
+                : copy.mocksDescription}
             </p>
           </div>
           <div className="flex gap-3">

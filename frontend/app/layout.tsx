@@ -23,10 +23,6 @@ export const metadata: Metadata = {
   title: "Career Copilot | Built with Gemma 4",
   description:
     "Premium AI career mentor powered by Gemma 4 (gemma-4-26b-a4b-it) — adaptive assessments, roadmaps, resumes, and interviews.",
-  icons: {
-    icon: "/logo-career-copilot.png",
-    apple: "/logo-career-copilot.png",
-  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

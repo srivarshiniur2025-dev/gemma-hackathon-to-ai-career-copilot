@@ -17,14 +17,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
-import {
-  MOCK_INTERNSHIP_RECOMMENDATIONS,
-  MOCK_INTERNSHIP_SEARCH,
-} from "@/lib/mock-fallbacks";
-import type { InternshipSearchResult, VerifiedInternshipRecommendation } from "@/lib/types";
+import { buildSkillAssessmentFromProgress, syncSkillAssessmentToBackend } from "@/lib/skills/progress";
+import { formatInternshipSources } from "@/lib/internship-sources";
+import type { InternshipRecommendResponse, InternshipSearchResult, VerifiedInternshipRecommendation } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { formatInternshipSources } from "@/lib/internship-sources";
 
 const tabs = ["Find Internships", "Gemma Match"] as const;
 
@@ -50,6 +47,7 @@ export default function InternshipsPage() {
   const [recommendCached, setRecommendCached] = useState(false);
   const [recommendLoading, setRecommendLoading] = useState(false);
   const [recommendExpanded, setRecommendExpanded] = useState<string | null>(null);
+  const [skillProfileUsed, setSkillProfileUsed] = useState<InternshipRecommendResponse["skill_profile_used"]>(null);
 
   const visibleResults = useMemo(() => {
     if (showRisky) return results;
@@ -112,10 +110,14 @@ export default function InternshipsPage() {
       setSearchMessage(data.message);
       setSearchSource(data.source);
       setCached(data.cached);
-    } catch {
-      setResults(MOCK_INTERNSHIP_SEARCH);
-      setSearchMessage("Demo mode — showing sample verified internships (backend unavailable).");
-      setSearchSource("demo");
+    } catch (err) {
+      setResults([]);
+      setSearchMessage(
+        err instanceof Error
+          ? err.message
+          : "Search failed. Check GOOGLE_API_KEY on the backend and try again."
+      );
+      setSearchSource(null);
       setCached(false);
     } finally {
       setLoading(false);
@@ -128,19 +130,33 @@ export default function InternshipsPage() {
     setRecommendExpanded(null);
 
     try {
-      const data = await api.recommendInternships();
+      const skillPayload = buildSkillAssessmentFromProgress();
+      if (Object.keys(skillPayload.skillsEstimate).length) {
+        await syncSkillAssessmentToBackend();
+      }
+
+      const data = await api.recommendInternships({
+        skills_estimate: skillPayload.skillsEstimate,
+        strengths: skillPayload.strengths,
+        weaknesses: skillPayload.weaknesses,
+        summary: skillPayload.summary,
+        force_refresh: true,
+      });
       setRecommendations(data.recommendations);
       setOverallAdvice(data.overall_advice);
       setRecommendMessage(data.message);
       setRecommendSource(data.source);
       setRecommendCached(data.cached);
-    } catch {
-      setRecommendations(MOCK_INTERNSHIP_RECOMMENDATIONS);
+      setSkillProfileUsed(data.skill_profile_used ?? null);
+    } catch (err) {
+      setRecommendations([]);
       setOverallAdvice(
-        "Demo mode — personalized matches based on your profile template. Connect the backend for live job fetching and scam screening."
+        err instanceof Error
+          ? err.message
+          : "Could not load recommendations. Ensure the backend is running with GOOGLE_API_KEY."
       );
       setRecommendMessage(null);
-      setRecommendSource("demo");
+      setRecommendSource(null);
       setRecommendCached(false);
     } finally {
       setRecommendLoading(false);
@@ -337,8 +353,17 @@ export default function InternshipsPage() {
                 <div>
                   <h2 className="font-bold text-foreground-heading">Personalized Gemma Match</h2>
                   <p className="text-sm text-muted">
-                    Fetches live internships across the web from your profile, validates links, screens for scams, then explains fit.
+                    Scans your skill builder test scores, fetches live internships, validates links, then explains fit with Gemma.
                   </p>
+                  {skillProfileUsed?.labeled_scores && Object.keys(skillProfileUsed.labeled_scores).length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {Object.entries(skillProfileUsed.labeled_scores).slice(0, 6).map(([skill, score]) => (
+                        <Badge key={skill} variant="secondary" className="text-xs">
+                          {skill} · {score}%
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <Button
                   onClick={() => void loadRecommendations()}

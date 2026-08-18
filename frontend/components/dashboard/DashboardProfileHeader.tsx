@@ -41,7 +41,7 @@ export function DashboardProfileHeader() {
             <Button variant="outline" size="sm" className="gap-2 rounded-xl cursor-pointer">
               <FlaskConical className="h-4 w-4" />
               <span className="hidden sm:inline">
-                {experienceForProfile(profile) === "school" ? "Practice" : "Mocks"}
+                {["school", "high_school"].includes(experienceForProfile(profile)) ? "Practice" : "Mocks"}
               </span>
             </Button>
           </Link>

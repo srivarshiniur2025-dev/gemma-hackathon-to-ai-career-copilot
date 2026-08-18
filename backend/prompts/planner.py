@@ -5,6 +5,30 @@ Never overload a school-age student. Prefer 45–90 minute blocks.
 Respond with valid JSON only."""
 
 
+def _track_guidance(profile: dict) -> str:
+    track = profile.get("learner_track") or "developer"
+    answers = profile.get("onboarding_answers") or {}
+    if track == "bio" or answers.get("exam") == "neet":
+        return (
+            "Track: NEET / PCB. Prefer blocks for Physics, Chemistry, Biology chapter drills, "
+            "PYQ-style papers, and one full mock per week. Reference weak NEET topics from onboarding."
+        )
+    if track == "grade_9_10":
+        return (
+            "Track: Class 9–10 science. Keep blocks 45–60 minutes. Focus on chapter quizzes, "
+            "homework review, and light revision — no interview or internship prep."
+        )
+    if track == "high_school":
+        return (
+            "Track: Class 11–12 boards + entrance. Balance board syllabus revision with mixed "
+            "entrance-style tests. Avoid NEET-only depth unless onboarding says NEET."
+        )
+    return (
+        "Track: Developer / internships. Prefer skill builder tests, DSA, project build time, "
+        "and mock interview blocks. Tie blocks to assessment weaknesses when provided."
+    )
+
+
 def recommend_prompt(profile: dict, message: str, history: list[dict[str, str]]) -> str:
     transcript = "\n".join(f"{m.get('role', 'user')}: {m.get('content', '')}" for m in history)
     return f"""Student profile:
@@ -14,6 +38,8 @@ Target: {profile.get('target_role')}
 Onboarding answers: {profile.get('onboarding_answers', {})}
 Roadmap overview: {(profile.get('roadmap') or {}).get('overview', '')}
 Weak topics: {profile.get('assessment', {}).get('weaknesses', [])}
+
+{_track_guidance(profile)}
 
 Conversation so far:
 {transcript}

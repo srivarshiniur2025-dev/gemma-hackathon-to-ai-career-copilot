@@ -42,6 +42,23 @@ export interface EvaluationResult {
   suggestions: string[];
 }
 
+export interface AssessmentAnswerResponse {
+  done?: boolean;
+  question?: string;
+  domain?: string;
+  question_number?: number;
+  feedback?: string;
+  score?: number;
+  is_correct?: boolean;
+  better_answer?: string;
+  industry_standard?: string;
+  suggestions?: string[];
+  summary?: string;
+  skills_estimate?: Record<string, string | number>;
+  strengths?: string[];
+  weaknesses?: string[];
+}
+
 export interface AssessmentInsights {
   currentSkillScore: number;
   confidence: number;
@@ -71,16 +88,4 @@ export interface AssessmentStartResponse {
   question: string;
   domain?: string;
   question_number?: number;
-}
-
-export interface AssessmentAnswerResponse {
-  done?: boolean;
-  question?: string;
-  domain?: string;
-  question_number?: number;
-  feedback?: string;
-  summary?: string;
-  skills_estimate?: Record<string, string | number>;
-  strengths?: string[];
-  weaknesses?: string[];
 }

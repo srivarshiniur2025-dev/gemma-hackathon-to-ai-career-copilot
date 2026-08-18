@@ -107,6 +107,11 @@ export const api = {
       domain?: string;
       question_number?: number;
       feedback?: string;
+      score?: number;
+      is_correct?: boolean;
+      better_answer?: string;
+      industry_standard?: string;
+      suggestions?: string[];
       summary?: string;
       skills_estimate?: Record<string, string | number>;
       strengths?: string[];
@@ -130,8 +135,17 @@ export const api = {
       body: JSON.stringify({ job_description: jobDescription, role_focus: roleFocus }),
     }),
 
-  recommendInternships: () =>
-    request<InternshipRecommendResponse>("/api/internships/recommend", { method: "POST" }),
+  recommendInternships: (body?: {
+    skills_estimate?: Record<string, number>;
+    strengths?: string[];
+    weaknesses?: string[];
+    summary?: string;
+    force_refresh?: boolean;
+  }) =>
+    request<InternshipRecommendResponse>("/api/internships/recommend", {
+      method: "POST",
+      body: JSON.stringify(body ?? {}),
+    }),
 
   checkInternshipSpam: (posting: InternshipPosting) =>
     request<SpamCheckResult>("/api/internships/spam-check", {

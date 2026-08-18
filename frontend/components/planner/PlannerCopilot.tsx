@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Loader2, Send, Sparkles } from "lucide-react";
 import { GemmaChatAvatar } from "@/components/gemma/GemmaBrand";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { api } from "@/lib/api";
 import type { TimelineEvent } from "@/lib/dashboard-data";
+import { experienceForProfile, trackCopy } from "@/lib/learner-track";
 import { colorizePlannerEvents } from "@/lib/personalize";
 
 type ChatTurn = { role: "user" | "assistant"; content: string };
@@ -23,17 +24,21 @@ type ProposedEvent = {
 
 export function PlannerCopilot() {
   const { career, profile, updatePlanner } = useCareerProfile();
+  const exp = experienceForProfile(profile);
+  const intro = trackCopy(exp).plannerCopilotIntro;
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<ChatTurn[]>([
-    {
-      role: "assistant",
-      content:
-        "Tell me when you are free this week and what feels difficult. I will draft a plan — it only lands on your calendar if you confirm it.",
-    },
+    { role: "assistant", content: intro },
   ]);
   const [proposal, setProposal] = useState<{ summary: string; events: ProposedEvent[] } | null>(null);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setHistory([{ role: "assistant", content: intro }]);
+    setProposal(null);
+    setError("");
+  }, [intro]);
 
   async function send(message: string) {
     const trimmed = message.trim();

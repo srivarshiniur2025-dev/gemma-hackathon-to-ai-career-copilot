@@ -142,4 +142,11 @@ export type InternshipRecommendResponse = {
   source: string | null;
   cached: boolean;
   message: string | null;
+  skill_profile_used?: {
+    skills_estimate?: Record<string, number>;
+    labeled_scores?: Record<string, number>;
+    strengths?: string[];
+    weaknesses?: string[];
+    summary?: string;
+  } | null;
 };

@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { SkillCatalog } from "@/components/assessment/SkillCatalog";
+import { useParams, useRouter } from "next/navigation";
+import { SkillRunner } from "@/components/assessment/SkillRunner";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { showsExamMocks } from "@/lib/learner-track";
 
-export default function AssessmentPage() {
-  const router = useRouter();
+export default function SkillTestPage() {
+  const params = useParams<{ testId: string }>();
   const { profile, loading } = useCareerProfile();
+  const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
@@ -16,5 +17,5 @@ export default function AssessmentPage() {
   }, [loading, profile, router]);
 
   if (showsExamMocks(profile)) return null;
-  return <SkillCatalog />;
+  return <SkillRunner testId={params.testId} />;
 }

@@ -121,7 +121,14 @@ export function useAssessmentFlow() {
         evalResult = buildEvaluationFromFeedback(
           String(res.feedback ?? ""),
           answer,
-          currentQuestion
+          currentQuestion,
+          {
+            score: typeof res.score === "number" ? res.score : undefined,
+            is_correct: res.is_correct,
+            better_answer: res.better_answer,
+            industry_standard: res.industry_standard,
+            suggestions: res.suggestions,
+          }
         );
       }
 

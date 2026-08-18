@@ -70,3 +70,4 @@ class InternshipRecommendResponse(BaseModel):
     source: str | None = None
     cached: bool = False
     message: str | None = None
+    skill_profile_used: dict | None = None

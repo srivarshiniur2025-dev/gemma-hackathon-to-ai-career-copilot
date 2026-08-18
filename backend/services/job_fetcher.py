@@ -433,46 +433,6 @@ async def _fetch_remoteok(query: str, skills: list[str] | None) -> list[dict]:
     return postings
 
 
-def _mock_postings(query: str, skills: list[str] | None) -> list[dict]:
-    """Structured sample data when no live sources return results."""
-    skill_hint = ", ".join(skills[:3]) if skills else "general tech"
-    base_query = query.strip() or "software intern"
-    return [
-        _normalize_posting(
-            title=f"{base_query.title()} — Engineering Intern",
-            company_name="TechNova Labs",
-            description=(
-                f"Join our engineering team for a paid internship focused on {skill_hint}. "
-                "Apply via our Greenhouse portal. No fees required."
-            ),
-            location="Remote",
-            salary="Competitive stipend",
-            source_url="https://boards.greenhouse.io/example/jobs/12345",
-        ),
-        _normalize_posting(
-            title=f"Junior {base_query.title()} Intern",
-            company_name="DataBridge Analytics",
-            description=(
-                f"Hybrid internship working with {skill_hint}. "
-                "Corporate email only; applications through Lever."
-            ),
-            location="Hybrid — San Francisco",
-            salary="$25–30/hr",
-            source_url="https://jobs.lever.co/example/intern-2025",
-        ),
-        _normalize_posting(
-            title="Remote Intern — Product Engineering",
-            company_name="CloudScale Systems",
-            description=(
-                "Workday-hosted application. Mentorship, real projects, no upfront payment."
-            ),
-            location="Remote",
-            salary=None,
-            source_url="https://company.wd5.myworkdayjobs.com/internships",
-        ),
-    ]
-
-
 def format_source_label(source: str | None) -> str | None:
     """Turn comma-separated source keys into readable labels."""
     if not source:
@@ -515,9 +475,5 @@ async def fetch_internships(
 
     if combined:
         return combined, ",".join(sources_used)
-
-    mock = [p for p in _mock_postings(query, skills) if p]
-    if mock:
-        return mock, "mock"
 
     return [], None

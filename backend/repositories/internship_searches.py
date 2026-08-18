@@ -80,7 +80,9 @@ async def get_cached_recommend(uid: str) -> dict | None:
     return doc.get("results")
 
 
-async def set_cached_recommend(uid: str, results: dict) -> None:
+async def clear_cached_recommend(uid: str) -> None:
+    db = get_db()
+    await db[COLLECTION].delete_one({"cache_key": _recommend_key(uid)})
     db = get_db()
     key = _recommend_key(uid)
     await db[COLLECTION].update_one(

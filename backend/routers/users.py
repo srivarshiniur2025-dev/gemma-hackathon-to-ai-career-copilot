@@ -27,6 +27,7 @@ class ProfileUpdate(BaseModel):
     certifications: list[str] | None = None
     roadmap: dict | None = None
     planner_events: list[dict] | None = None
+    assessment: dict | None = None
 
 
 @router.post("/register")
@@ -53,6 +54,10 @@ async def update_me(payload: ProfileUpdate, user: Annotated[dict, Depends(get_cu
             user["email"],
             updates.get("name") or user.get("name") or "Student",
         )
+        existing = await user_repo.get_user_by_uid(user["uid"]) or {}
+    if "assessment" in updates and existing.get("assessment"):
+        merged = {**existing.get("assessment", {}), **updates["assessment"]}
+        updates["assessment"] = merged
     if not updates:
         profile = await user_repo.get_user_by_uid(user["uid"])
         if not profile:

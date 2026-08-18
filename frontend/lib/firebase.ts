@@ -109,8 +109,10 @@ export function firebaseAuthErrorMessage(err: unknown): string {
       return "Invalid email or password";
     case "auth/too-many-requests":
       return "Too many attempts. Please wait and try again";
-    case "auth/unauthorized-domain":
-      return "This domain is not allowed in Firebase. Add localhost in Authentication → Settings → Authorized domains";
+    case "auth/unauthorized-domain": {
+      const host = typeof window !== "undefined" ? window.location.hostname : "this site";
+      return `This domain is not allowed in Firebase. Add ${host} in Authentication → Settings → Authorized domains`;
+    }
     case "auth/popup-blocked":
       return "The Google sign-in popup was blocked. Allow popups for this site and try again";
     case "auth/operation-not-allowed":
