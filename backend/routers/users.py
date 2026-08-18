@@ -67,3 +67,11 @@ async def update_me(payload: ProfileUpdate, user: Annotated[dict, Depends(get_cu
     if not updated:
         raise HTTPException(status_code=404, detail="Profile not found")
     return updated
+
+
+@router.delete("/me")
+async def delete_me(user: Annotated[dict, Depends(get_current_user)]):
+    deleted = await user_repo.delete_user(user["uid"])
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return {"deleted": True}

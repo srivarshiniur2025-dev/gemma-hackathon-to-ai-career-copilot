@@ -94,6 +94,8 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  deleteMe: () => request<{ deleted: boolean }>("/api/users/me", { method: "DELETE" }),
+
   startAssessment: () =>
     request<{ welcome?: string; question: string; domain?: string; question_number?: number }>(
       "/api/assessment/start",

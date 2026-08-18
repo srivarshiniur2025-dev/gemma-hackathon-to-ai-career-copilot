@@ -170,6 +170,29 @@ export function logout(): void {
   sessionStorage.removeItem(STORAGE_KEYS.SESSION);
 }
 
+export function deleteLocalAccountData(): void {
+  if (!isBrowser()) return;
+
+  // Remove demo credential + session flags
+  localStorage.removeItem(STORAGE_KEYS.USER);
+  localStorage.removeItem(STORAGE_KEYS.IS_LOGGED_IN);
+  localStorage.removeItem(STORAGE_KEYS.SESSION);
+  localStorage.removeItem(STORAGE_KEYS.USE_LOCAL);
+  sessionStorage.removeItem(STORAGE_KEYS.IS_LOGGED_IN);
+  sessionStorage.removeItem(STORAGE_KEYS.SESSION);
+
+  // Purge app data tied to Career Copilot
+  const prefixes = ["careerCopilotCareer:", "careerCopilotProfile:", "careerCopilotSkills:", "careerCopilotMocks:"];
+  const resumeDraftKey = "careerCopilotResumeDraft";
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const k = localStorage.key(i);
+    if (!k) continue;
+    if (k === resumeDraftKey || prefixes.some((p) => k.startsWith(p))) {
+      localStorage.removeItem(k);
+    }
+  }
+}
+
 /** Demo token for API calls — replace with Firebase getIdToken() later */
 export function getDemoToken(): string {
   const user = getCurrentUser();

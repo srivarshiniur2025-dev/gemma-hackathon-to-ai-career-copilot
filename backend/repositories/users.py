@@ -147,3 +147,41 @@ async def update_user(uid: str, updates: dict) -> dict | None:
 
 async def patch_user_field(uid: str, key: str, value) -> dict | None:
     return await update_user(uid, {key: value})
+
+
+async def delete_user(uid: str) -> bool:
+    """
+    Deletes a user profile from the backend store (Mongo if available, otherwise fallback JSON/memory).
+    Used by DELETE /api/users/me.
+    """
+
+    deleted = False
+
+    # Mongo path
+    if is_mongo_available():
+        try:
+            db = get_db()
+            result = await db.users.delete_one({"uid": uid})
+            deleted = bool(getattr(result, "deleted_count", 0))
+            set_mongo_available(True)
+            return deleted
+        except Exception as exc:
+            set_mongo_available(False)
+            logging.warning("MongoDB delete failed, using local profile store: %s", exc)
+
+    # Fallback path (memory + optional persisted json file)
+    store = _load_fallback()
+    if uid in store:
+        try:
+            if uid in _memory:
+                del _memory[uid]
+            else:
+                # If _memory was empty but _load_fallback read from disk into _memory,
+                # ensure we delete from the canonical map.
+                _memory.pop(uid, None)
+            _save_fallback()
+            deleted = True
+        except Exception as exc:
+            logging.warning("Fallback user delete failed: %s", exc)
+
+    return deleted

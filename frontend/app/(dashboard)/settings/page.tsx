@@ -1,14 +1,39 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { FadeIn } from "@/components/motion/FadeIn";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
+import { deleteLocalAccountData } from "@/lib/fake-auth";
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, firebaseEnabled, logout } = useAuth();
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDeleteAccount() {
+    if (deleting) return;
+    const confirmed = window.confirm("Delete your account? This removes your Career Copilot profile data.");
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await api.deleteMe();
+      if (!firebaseEnabled) deleteLocalAccountData();
+      await logout();
+      router.push("/login");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Delete failed. Please try again.";
+      alert(message);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -42,7 +67,9 @@ export default function SettingsPage() {
         <CardHeader><CardTitle>Privacy</CardTitle></CardHeader>
         <CardContent>
           <p className="text-sm text-muted mb-4">Your profile is stored with Firebase Auth and the Career Copilot backend.</p>
-          <Button variant="destructive">Delete Account</Button>
+          <Button variant="destructive" disabled={deleting} onClick={() => void handleDeleteAccount()}>
+            {deleting ? "Deleting..." : "Delete Account"}
+          </Button>
         </CardContent>
       </Card>
     </div>
