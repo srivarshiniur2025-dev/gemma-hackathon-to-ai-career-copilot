@@ -2,6 +2,10 @@ import { MATHS_CARDS, MATHS_QUESTIONS } from "./bank-maths";
 import { MATHS_CARDS_EXTRA, MATHS_QUESTIONS_EXTRA } from "./bank-maths-extra";
 import { SCIENCE_CARDS, SCIENCE_QUESTIONS } from "./bank-science";
 import { SCIENCE_CARDS_EXTRA, SCIENCE_QUESTIONS_EXTRA } from "./bank-science-extra";
+import { MATHS9_MORE } from "./bank-maths9-more";
+import { MATHS10_MORE } from "./bank-maths10-more";
+import { SCIENCE9_MORE } from "./bank-science9-more";
+import { SCIENCE10_MORE } from "./bank-science10-more";
 import {
   buildCards,
   buildQuestions,
@@ -23,7 +27,16 @@ function mergeBanks<T>(...banks: Record<string, T[]>[]): Record<string, T[]> {
   return out;
 }
 
-const RAW_QUESTIONS = mergeBanks(SCIENCE_QUESTIONS, SCIENCE_QUESTIONS_EXTRA, MATHS_QUESTIONS, MATHS_QUESTIONS_EXTRA);
+const RAW_QUESTIONS = mergeBanks(
+  SCIENCE_QUESTIONS,
+  SCIENCE_QUESTIONS_EXTRA,
+  SCIENCE9_MORE,
+  SCIENCE10_MORE,
+  MATHS_QUESTIONS,
+  MATHS_QUESTIONS_EXTRA,
+  MATHS9_MORE,
+  MATHS10_MORE
+);
 const RAW_CARDS = mergeBanks(SCIENCE_CARDS, SCIENCE_CARDS_EXTRA, MATHS_CARDS, MATHS_CARDS_EXTRA);
 
 const questionCache = new Map<string, SchoolQuestion[]>();
