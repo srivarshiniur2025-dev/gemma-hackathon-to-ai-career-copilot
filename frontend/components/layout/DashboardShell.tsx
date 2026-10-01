@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardIconSidebar } from "@/components/dashboard/DashboardIconSidebar";
 import { DashboardNavProvider, useDashboardNav } from "@/components/dashboard/DashboardNavContext";
-import { MobileNavTrigger } from "@/components/dashboard/MobileNavTrigger";
+import { PageBar } from "@/components/dashboard/PageBar";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +40,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
           isDashboard ? "p-3 md:p-4" : "overflow-auto"
         )}
       >
-        {!isAssessment && !isDashboard && <MobileNavTrigger />}
+        {!isAssessment && !isDashboard && <PageBar />}
         <main
           className={cn(
             "flex-1",

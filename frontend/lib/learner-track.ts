@@ -61,22 +61,26 @@ export type NavItem = {
     | "interview"
     | "progress"
     | "settings";
+  group: NavGroup;
 };
 
+export type NavGroup = "Overview" | "Practice" | "Plan" | "Career" | "Account";
+export const NAV_GROUP_ORDER: NavGroup[] = ["Overview", "Practice", "Plan", "Career", "Account"];
+
 export const SCHOOL_PRACTICE_NAV: NavItem[] = [
-  { href: "/mocks", label: "Chapter Tests", icon: "mocks" },
-  { href: "/gemma-questions", label: "Gemma Questions", icon: "agent" },
-  { href: "/notes", label: "Gemma Notes", icon: "notes" },
-  { href: "/activities", label: "Activities", icon: "activities" },
-  { href: "/scoreboard", label: "My Scoreboard", icon: "scoreboard" },
+  { href: "/mocks", label: "Chapter Tests", icon: "mocks", group: "Practice" },
+  { href: "/gemma-questions", label: "Gemma Questions", icon: "agent", group: "Practice" },
+  { href: "/notes", label: "Gemma Notes", icon: "notes", group: "Practice" },
+  { href: "/activities", label: "Activities", icon: "activities", group: "Practice" },
+  { href: "/scoreboard", label: "My Scoreboard", icon: "scoreboard", group: "Practice" },
 ];
 
 export function navItemsForProfile(profile: Profile | null | undefined): NavItem[] {
   const exp = experienceForProfile(profile);
-  const items: NavItem[] = [{ href: "/dashboard", label: "Dashboard", icon: "dashboard" }];
+  const items: NavItem[] = [{ href: "/dashboard", label: "Dashboard", icon: "dashboard", group: "Overview" }];
 
   if (exp === "developer") {
-    items.push({ href: "/assessment", label: "Skill Assessments", icon: "assessment" });
+    items.push({ href: "/assessment", label: "Skill Assessments", icon: "assessment", group: "Practice" });
   } else if (exp === "school") {
     items.push(...SCHOOL_PRACTICE_NAV);
   } else {
@@ -89,28 +93,29 @@ export function navItemsForProfile(profile: Profile | null | undefined): NavItem
             ? "Board & Entrance Tests"
             : "Chapter Practice",
       icon: "mocks",
+      group: "Practice",
     });
   }
 
   items.push(
-    { href: "/roadmap", label: "Learning Roadmap", icon: "roadmap" },
-    { href: "/planner", label: "Study Planner", icon: "planner" }
+    { href: "/roadmap", label: "Learning Roadmap", icon: "roadmap", group: "Plan" },
+    { href: "/planner", label: "Study Planner", icon: "planner", group: "Plan" }
   );
 
   if (showsResumeBuilder(profile)) {
-    items.push({ href: "/resume", label: "Resume Builder", icon: "resume" });
+    items.push({ href: "/resume", label: "Resume Builder", icon: "resume", group: "Career" });
   }
   if (showsInternships(profile)) {
-    items.push({ href: "/internships", label: "Internships", icon: "internships" });
+    items.push({ href: "/internships", label: "Internships", icon: "internships", group: "Career" });
   }
 
   if (showsMockInterviews(profile)) {
-    items.push({ href: "/interview", label: "Mock Interview", icon: "interview" });
+    items.push({ href: "/interview", label: "Mock Interview", icon: "interview", group: "Career" });
   }
 
   items.push(
-    { href: "/progress", label: "Progress", icon: "progress" },
-    { href: "/settings", label: "Settings", icon: "settings" }
+    { href: "/progress", label: "Progress", icon: "progress", group: "Account" },
+    { href: "/settings", label: "Settings", icon: "settings", group: "Account" }
   );
 
   return items;

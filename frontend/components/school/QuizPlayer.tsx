@@ -120,7 +120,7 @@ export function QuizPlayer({ title, questions, kind, email, chapterId, secondsPe
               <p className="text-xs text-muted">points earned</p>
             </div>
             <div>
-              <p className="flex items-center justify-center gap-1 text-4xl font-extrabold text-orange-500">
+              <p className="flex items-center justify-center gap-1 text-4xl font-extrabold text-warning">
                 <Flame className="h-7 w-7" /> {bestStreak}
               </p>
               <p className="text-xs text-muted">best streak</p>
@@ -156,7 +156,7 @@ export function QuizPlayer({ title, questions, kind, email, chapterId, secondsPe
                   <span className={ok ? "text-success" : "text-error"}>Q{i + 1}</span>
                   <span className="rounded-full bg-background-secondary px-2 py-0.5 capitalize text-muted">{item.difficulty}</span>
                   {item.source === "gemma" ? (
-                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-violet-700">Gemma</span>
+                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-accent-hover">Gemma</span>
                   ) : null}
                 </div>
                 <p className="text-sm font-medium text-foreground-heading">{item.question}</p>
@@ -189,7 +189,7 @@ export function QuizPlayer({ title, questions, kind, email, chapterId, secondsPe
           <ArrowLeft className="h-4 w-4" /> Exit
         </button>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-3 py-1.5 text-sm font-semibold text-orange-500">
+          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-3 py-1.5 text-sm font-semibold text-warning">
             <Flame className="h-4 w-4" /> {streak}
           </span>
           {secondsPerQuestion ? (

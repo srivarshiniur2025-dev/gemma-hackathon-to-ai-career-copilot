@@ -29,10 +29,7 @@ export function DashboardNavbar({ className }: DashboardNavbarProps) {
       <button
         type="button"
         aria-label="Open menu"
-        onClick={() => {
-          toggleNavPanel();
-          openMobileNav();
-        }}
+        onClick={openMobileNav}
         className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-muted-secondary transition-colors hover:bg-background-hover md:hidden"
       >
         <Menu className="h-5 w-5" />

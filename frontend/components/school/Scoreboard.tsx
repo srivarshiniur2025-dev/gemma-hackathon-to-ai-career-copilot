@@ -36,27 +36,34 @@ export function Scoreboard({ board, classLevel, subject }: Props) {
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat icon={<Trophy className="h-5 w-5" />} label="Total points" value={board.totalPoints} tone="from-amber-400 to-orange-500" />
-        <Stat icon={<Star className="h-5 w-5" />} label="Level" value={level.name} tone="from-violet-500 to-fuchsia-500" />
-        <Stat icon={<Flame className="h-5 w-5" />} label="Day streak" value={`${streak} day${streak === 1 ? "" : "s"}`} tone="from-rose-500 to-orange-400" />
-        <Stat icon={<Medal className="h-5 w-5" />} label="Accuracy" value={`${accuracy}%`} tone="from-emerald-500 to-teal-500" />
-      </div>
-
-      <div className="rounded-[24px] border border-border bg-white p-5">
-        <div className="flex items-center justify-between text-sm">
-          <p className="font-semibold text-foreground-heading">{level.name}</p>
-          <p className="text-muted">{level.nextAt ? `${level.nextAt - board.totalPoints} pts to next level` : "Max level reached!"}</p>
+      <div className="relative overflow-hidden rounded-[var(--radius-card)] border border-primary bg-primary p-5 shadow-[var(--shadow-lg)] sm:p-6">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-30"
+          style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)", backgroundSize: "20px 20px" }}
+        />
+        <div aria-hidden className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-accent/25 blur-3xl" />
+        <div className="relative grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat icon={Trophy} label="Total points" value={board.totalPoints} />
+          <Stat icon={Star} label="Level" value={level.name} />
+          <Stat icon={Flame} label="Day streak" value={`${streak} day${streak === 1 ? "" : "s"}`} />
+          <Stat icon={Medal} label="Accuracy" value={`${accuracy}%`} />
         </div>
-        <div className="mt-2 h-3 overflow-hidden rounded-full bg-background-secondary">
-          <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-sky-500" style={{ width: `${level.progress}%` }} />
+        <div className="relative mt-5">
+          <div className="flex items-center justify-between text-xs">
+            <p className="font-semibold uppercase tracking-[0.16em] text-zinc-400">Level progress</p>
+            <p className="text-zinc-300">{level.nextAt ? `${level.nextAt - board.totalPoints} pts to next level` : "Max level reached"}</p>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full rounded-full bg-accent-light" style={{ width: `${level.progress}%` }} />
+          </div>
         </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="rounded-[24px] border border-border bg-white p-5">
           <p className="flex items-center gap-2 font-heading text-base font-bold text-foreground-heading">
-            <Award className="h-5 w-5 text-amber-500" /> Badges
+            <Award className="h-5 w-5 text-accent" /> Badges
           </p>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {Object.entries(BADGES).map(([id, b]) => {
@@ -66,11 +73,11 @@ export function Scoreboard({ board, classLevel, subject }: Props) {
                   key={id}
                   className={cn(
                     "rounded-2xl border p-3 text-center",
-                    earned ? "border-amber-200 bg-amber-50" : "border-dashed border-border bg-background-secondary/50 opacity-70"
+                    earned ? "border-accent/30 bg-accent/5" : "border-dashed border-border bg-background-secondary/50 opacity-70"
                   )}
                   title={b.hint}
                 >
-                  {earned ? <Award className="mx-auto h-6 w-6 text-amber-500" /> : <Lock className="mx-auto h-5 w-5 text-muted" />}
+                  {earned ? <Award className="mx-auto h-6 w-6 text-accent" /> : <Lock className="mx-auto h-5 w-5 text-muted" />}
                   <p className="mt-1 text-xs font-semibold text-foreground-heading">{b.label}</p>
                   <p className="text-[10px] text-muted">{b.hint}</p>
                 </div>
@@ -91,13 +98,13 @@ export function Scoreboard({ board, classLevel, subject }: Props) {
                     <span className="truncate pr-2 text-foreground">
                       Ch {c.number}. {c.name}
                     </span>
-                    <span className={cn("font-semibold", pct >= 80 ? "text-success" : pct >= 50 ? "text-amber-600" : "text-muted")}>
+                    <span className={cn("font-semibold", pct >= 80 ? "text-accent" : pct >= 50 ? "text-foreground-heading" : "text-muted")}>
                       {pct ? `${pct}%` : "—"}
                     </span>
                   </div>
                   <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-background-secondary">
                     <div
-                      className={cn("h-full rounded-full", pct >= 80 ? "bg-success" : pct >= 50 ? "bg-amber-400" : "bg-sky-400")}
+                      className={cn("h-full rounded-full", pct >= 80 ? "bg-accent" : pct >= 50 ? "bg-accent-light/70" : "bg-zinc-400")}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -147,13 +154,16 @@ export function Scoreboard({ board, classLevel, subject }: Props) {
   );
 }
 
-function Stat({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string | number; tone: string }) {
+function Stat({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) {
   return (
-    <div className={cn("rounded-[22px] bg-gradient-to-br p-4 text-white shadow-[var(--shadow-md)]", tone)}>
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide opacity-90">
-        {icon} {label}
+    <div className="bg-primary/95 p-4">
+      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
+        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-accent/15 text-accent-light">
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+        {label}
       </div>
-      <p className="mt-2 font-heading text-2xl font-bold">{value}</p>
+      <p className="mt-3 font-heading text-2xl font-bold text-white">{value}</p>
     </div>
   );
 }

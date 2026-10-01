@@ -25,12 +25,12 @@ export function GemmaWaiting({ label }: { label: string }) {
   const tip = TIPS[Math.floor(seconds / 4) % TIPS.length];
 
   return (
-    <div className="rounded-2xl border border-violet-200 bg-white/80 p-4" role="status" aria-live="polite">
+    <div className="rounded-2xl border border-accent/25 bg-white/80 p-4" role="status" aria-live="polite">
       <div className="flex items-center gap-3">
         <motion.span
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 2.4, ease: "linear" }}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-100 text-violet-700"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-accent-hover"
         >
           <Sparkles className="h-4 w-4" />
         </motion.span>
@@ -51,9 +51,9 @@ export function GemmaWaiting({ label }: { label: string }) {
           </AnimatePresence>
         </div>
       </div>
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-violet-100">
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-accent/10">
         <motion.div
-          className="h-full w-1/3 rounded-full bg-gradient-to-r from-violet-500 to-sky-500"
+          className="h-full w-1/3 rounded-full bg-accent"
           animate={{ x: ["-100%", "300%"] }}
           transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
         />

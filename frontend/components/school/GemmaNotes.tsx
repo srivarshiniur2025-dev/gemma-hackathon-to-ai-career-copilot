@@ -123,9 +123,9 @@ export function GemmaNotes({ classLevel, subject, email }: Props) {
   return (
     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
       <div className="space-y-4">
-        <div className="rounded-[24px] border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-5">
+        <div className="rounded-[24px] border border-accent/25 bg-white p-5">
           <div className="flex items-center gap-2">
-            <NotebookPen className="h-5 w-5 text-emerald-600" />
+            <NotebookPen className="h-5 w-5 text-accent" />
             <p className="font-heading text-base font-bold text-foreground-heading">Gemma Notes</p>
           </div>
           <p className="mt-1 text-xs text-muted">
@@ -181,7 +181,7 @@ export function GemmaNotes({ classLevel, subject, email }: Props) {
             value={request}
             onChange={(e) => setRequest(e.target.value)}
             placeholder="Anything specific? (optional)"
-            className="mt-4 w-full rounded-2xl border border-border bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400"
+            className="mt-4 w-full rounded-2xl border border-border bg-white px-3 py-2 text-sm outline-none focus:border-accent-light"
           />
 
           <Button variant="accent" className="mt-4 w-full" onClick={generate} disabled={loading || !topics.length}>
@@ -193,7 +193,7 @@ export function GemmaNotes({ classLevel, subject, email }: Props) {
 
         <div className="rounded-[24px] border border-border bg-white p-5">
           <div className="flex items-center gap-2">
-            <Brain className="h-4 w-4 text-violet-600" />
+            <Brain className="h-4 w-4 text-accent" />
             <p className="text-sm font-bold text-foreground-heading">Gemma remembers</p>
           </div>
           {prefs.length === 0 ? (
@@ -243,7 +243,7 @@ export function GemmaNotes({ classLevel, subject, email }: Props) {
           </div>
         ) : !notes ? (
           <div className="flex h-full min-h-[320px] flex-col items-center justify-center text-center">
-            <BookOpenCheck className="h-10 w-10 text-emerald-500" />
+            <BookOpenCheck className="h-10 w-10 text-accent" />
             <p className="mt-3 font-heading text-lg font-bold text-foreground-heading">Pick a chapter and generate notes</p>
             <p className="mt-1 max-w-sm text-sm text-muted">
               You&apos;ll get a summary, key terms, formulas, examples, common mistakes, memory tricks, exam tips and a quick self-check.
@@ -325,11 +325,11 @@ export function NotesBody({ notes, compact = false }: { notes: SchoolNotes; comp
         </section>
       ) : null}
 
-      <NoteList title="Formulas" items={notes.formulas} tone="bg-sky-50 text-sky-900" />
+      <NoteList title="Formulas" items={notes.formulas} tone="bg-background-secondary text-foreground-heading" />
       <NoteList title="Examples" items={notes.examples} />
-      <NoteList title="Common mistakes" items={notes.mistakes} tone="bg-rose-50 text-rose-900" />
-      <NoteList title="Memory tricks" items={notes.memory_tricks} tone="bg-amber-50 text-amber-900" />
-      <NoteList title="Exam tips" items={notes.exam_tips} tone="bg-emerald-50 text-emerald-900" />
+      <NoteList title="Common mistakes" items={notes.mistakes} tone="bg-error/5 text-foreground-heading" />
+      <NoteList title="Memory tricks" items={notes.memory_tricks} tone="bg-warning/10 text-foreground-heading" />
+      <NoteList title="Exam tips" items={notes.exam_tips} tone="bg-accent/5 text-foreground-heading" />
 
       {notes.quick_check.length ? (
         <section>

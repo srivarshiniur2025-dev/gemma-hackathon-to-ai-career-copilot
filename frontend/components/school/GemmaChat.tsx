@@ -192,7 +192,7 @@ export function GemmaChat({ mode, classLevel, subject, email, focusChapterId, pr
     <div
       className={cn(
         "flex flex-col rounded-[28px] border bg-white shadow-[var(--shadow-md)]",
-        accent === "violet" ? "border-violet-200" : "border-emerald-200"
+        accent === "violet" ? "border-accent/25" : "border-accent/25"
       )}
     >
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
@@ -200,7 +200,7 @@ export function GemmaChat({ mode, classLevel, subject, email, focusChapterId, pr
           <span
             className={cn(
               "flex h-10 w-10 items-center justify-center rounded-2xl text-white",
-              accent === "violet" ? "bg-violet-600" : "bg-emerald-600"
+              accent === "violet" ? "bg-accent" : "bg-accent"
             )}
           >
             <MessageCircle className="h-5 w-5" />
@@ -239,7 +239,7 @@ export function GemmaChat({ mode, classLevel, subject, email, focusChapterId, pr
                   key={s}
                   type="button"
                   onClick={() => send(s)}
-                  className="rounded-full border border-border bg-white px-3 py-1.5 text-xs font-medium text-foreground hover:border-violet-300"
+                  className="rounded-full border border-border bg-white px-3 py-1.5 text-xs font-medium text-foreground hover:border-accent/40"
                 >
                   {s}
                 </button>
@@ -255,9 +255,9 @@ export function GemmaChat({ mode, classLevel, subject, email, focusChapterId, pr
             </Bubble>
 
             {e.questions?.length ? (
-              <div className="ml-11 rounded-2xl border border-violet-200 bg-violet-50/60 p-4">
+              <div className="ml-11 rounded-2xl border border-accent/25 bg-accent/5/60 p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold text-foreground-heading">
-                  <ListChecks className="h-4 w-4 text-violet-600" /> {e.questions.length} questions ready
+                  <ListChecks className="h-4 w-4 text-accent" /> {e.questions.length} questions ready
                   {e.chapterId ? <span className="font-normal text-muted">· {schoolChapterById(e.chapterId)?.name}</span> : null}
                 </p>
                 <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs text-muted">
@@ -284,7 +284,7 @@ export function GemmaChat({ mode, classLevel, subject, email, focusChapterId, pr
             ) : null}
 
             {e.notes ? (
-              <div className="ml-11 rounded-2xl border border-emerald-200 bg-emerald-50/40">
+              <div className="ml-11 rounded-2xl border border-accent/25 bg-accent/5/40">
                 <button
                   type="button"
                   onClick={() => setOpenNotes((id) => (id === e.id ? null : e.id))}
@@ -294,7 +294,7 @@ export function GemmaChat({ mode, classLevel, subject, email, focusChapterId, pr
                   {openNotes === e.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </button>
                 {openNotes === e.id ? (
-                  <div className="border-t border-emerald-100 bg-white px-4 py-4">
+                  <div className="border-t border-accent/10 bg-white px-4 py-4">
                     <NotesBody notes={e.notes} compact />
                   </div>
                 ) : null}
@@ -329,7 +329,7 @@ export function GemmaChat({ mode, classLevel, subject, email, focusChapterId, pr
           rows={1}
           maxLength={2000}
           placeholder={mode === "questions" ? "e.g. 8 hard questions on refraction, board style" : "e.g. explain Newton's third law with an example"}
-          className="max-h-32 min-h-[44px] flex-1 resize-none rounded-2xl border border-border bg-background-secondary/50 px-4 py-2.5 text-sm outline-none focus:border-violet-400"
+          className="max-h-32 min-h-[44px] flex-1 resize-none rounded-2xl border border-border bg-background-secondary/50 px-4 py-2.5 text-sm outline-none focus:border-accent-light"
         />
         <Button type="submit" variant="accent" size="icon" disabled={loading || !input.trim()} aria-label="Send">
           <Send className="h-4 w-4" />
@@ -343,8 +343,8 @@ function Bubble({ role, error, children }: { role: "user" | "assistant"; error?:
   if (role === "user") {
     return (
       <div className="flex items-start justify-end gap-3">
-        <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-violet-600 px-4 py-2.5 text-sm text-white">{children}</div>
-        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+        <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-accent px-4 py-2.5 text-sm text-white">{children}</div>
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white">
           <User className="h-4 w-4" />
         </span>
       </div>
@@ -352,7 +352,7 @@ function Bubble({ role, error, children }: { role: "user" | "assistant"; error?:
   }
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-3">
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-700">
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent-hover">
         <Bot className="h-4 w-4" />
       </span>
       <div

@@ -138,13 +138,13 @@ export function FlashcardsActivity({ classLevel, subject, email, onExit, initial
               transition={{ duration: 0.45 }}
               className="relative h-full w-full [transform-style:preserve-3d]"
             >
-              <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[28px] bg-gradient-to-br from-sky-500 to-violet-600 p-6 text-white shadow-lg [backface-visibility:hidden]">
+              <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[28px] bg-primary p-6 text-white shadow-lg [backface-visibility:hidden]">
                 <p className="text-xs uppercase tracking-widest opacity-80">Term</p>
-                <p className="mt-2 text-center font-heading text-2xl font-bold">{card.front}</p>
+                <p className="mt-2 text-center font-heading text-2xl font-bold text-white">{card.front}</p>
                 <p className="mt-4 text-xs opacity-80">Tap to flip</p>
               </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[28px] bg-white p-6 text-foreground-heading shadow-lg ring-2 ring-violet-200 [backface-visibility:hidden] [transform:rotateY(180deg)]">
-                <p className="text-xs uppercase tracking-widest text-violet-600">Meaning</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[28px] bg-white p-6 text-foreground-heading shadow-lg ring-2 ring-accent/25 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                <p className="text-xs uppercase tracking-widest text-accent">Meaning</p>
                 <p className="mt-2 text-center text-lg font-semibold">{card.back}</p>
               </div>
             </motion.div>
@@ -240,7 +240,7 @@ export function TrueFalseSprint({ classLevel, subject, email, onExit }: Base) {
         right={
           running ? (
             <div className="flex gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-3 py-1.5 text-sm font-semibold text-orange-500">
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-3 py-1.5 text-sm font-semibold text-warning">
                 <Flame className="h-4 w-4" /> {streak}
               </span>
               <span className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-3 py-1.5 text-sm font-semibold">
@@ -395,8 +395,8 @@ export function MatchPairs({ classLevel, subject, email, onExit }: Base) {
                   className={cn(
                     "w-full rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition-colors",
                     matched.includes(p.front) && "border-success bg-success/10 text-success",
-                    selected === p.front && "border-violet-500 bg-violet-50",
-                    !matched.includes(p.front) && selected !== p.front && "border-border bg-white hover:border-violet-300"
+                    selected === p.front && "border-accent bg-accent/5",
+                    !matched.includes(p.front) && selected !== p.front && "border-border bg-white hover:border-accent/40"
                   )}
                 >
                   {p.front}
@@ -413,7 +413,7 @@ export function MatchPairs({ classLevel, subject, email, onExit }: Base) {
                   animate={wrong === m.front ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }}
                   className={cn(
                     "w-full rounded-2xl border px-4 py-3 text-left text-sm transition-colors",
-                    matched.includes(m.front) ? "border-success bg-success/10 text-success" : "border-border bg-white hover:border-violet-300",
+                    matched.includes(m.front) ? "border-success bg-success/10 text-success" : "border-border bg-white hover:border-accent/40",
                     wrong === m.front && "border-error bg-error/10"
                   )}
                 >

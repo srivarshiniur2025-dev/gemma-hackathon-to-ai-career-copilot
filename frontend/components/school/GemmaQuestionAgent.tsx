@@ -191,10 +191,10 @@ export function GemmaQuestionAgent({ classLevel, subject, email, onPlay }: Props
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
-      <div className="rounded-[28px] border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-sky-50 p-5 shadow-[var(--shadow-md)] sm:p-6">
+      <div className="rounded-[28px] border border-accent/25 bg-white p-5 shadow-[var(--shadow-md)] sm:p-6">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-600 text-white">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-white">
               <Bot className="h-6 w-6" />
             </span>
             <div>
@@ -204,7 +204,7 @@ export function GemmaQuestionAgent({ classLevel, subject, email, onPlay }: Props
               </p>
             </div>
           </div>
-          <button type="button" onClick={reset} disabled={loading} className="inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-violet-700">
+          <button type="button" onClick={reset} disabled={loading} className="inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-accent-hover">
             <RotateCcw className="h-3.5 w-3.5" /> Start over
           </button>
         </div>
@@ -277,7 +277,7 @@ export function GemmaQuestionAgent({ classLevel, subject, email, onPlay }: Props
                     value={focusText}
                     onChange={(e) => setFocusText(e.target.value)}
                     placeholder="e.g. I keep mixing up mitosis and meiosis"
-                    className="w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm outline-none focus:border-violet-400"
+                    className="w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm outline-none focus:border-accent-light"
                   />
                   <Button variant="accent" size="sm" onClick={() => setStep("difficulty")}>
                     {focus.length || focusText.trim() ? "Continue" : "Skip — surprise me"}
@@ -339,7 +339,7 @@ export function GemmaQuestionAgent({ classLevel, subject, email, onPlay }: Props
                       rows={4}
                       maxLength={4000}
                       placeholder="Paste your class notes here — Gemma will use them as the main reference."
-                      className="w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm outline-none focus:border-violet-400"
+                      className="w-full rounded-2xl border border-border bg-white px-4 py-2.5 text-sm outline-none focus:border-accent-light"
                     />
                   ) : null}
                   <Button variant="accent" size="sm" disabled={!references.length} onClick={() => setStep("count")}>
@@ -441,7 +441,7 @@ export function GemmaQuestionAgent({ classLevel, subject, email, onPlay }: Props
 function AgentBubble({ children }: { children: React.ReactNode }) {
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-3">
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-700">
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent-hover">
         <Bot className="h-4 w-4" />
       </span>
       <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-white px-4 py-2.5 text-sm text-foreground shadow-sm">{children}</div>
@@ -452,10 +452,10 @@ function AgentBubble({ children }: { children: React.ReactNode }) {
 function UserBubble({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className="flex items-start justify-end gap-3">
-      <div className={cn("max-w-[85%] rounded-2xl rounded-tr-sm bg-violet-600 px-4 py-2.5 text-sm text-white", className)}>
+      <div className={cn("max-w-[85%] rounded-2xl rounded-tr-sm bg-accent px-4 py-2.5 text-sm text-white", className)}>
         {children}
       </div>
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white">
         <User className="h-4 w-4" />
       </span>
     </div>
@@ -469,7 +469,7 @@ export function Chip({ active, onClick, children }: { active?: boolean; onClick:
       onClick={onClick}
       className={cn(
         "rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
-        active ? "border-violet-500 bg-violet-600 text-white" : "border-border bg-white text-foreground hover:border-violet-300"
+        active ? "border-accent bg-accent text-white" : "border-border bg-white text-foreground hover:border-accent/40"
       )}
     >
       {children}

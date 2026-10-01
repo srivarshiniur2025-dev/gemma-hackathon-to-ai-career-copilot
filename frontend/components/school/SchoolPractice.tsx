@@ -4,11 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { MotionConfig, motion } from "framer-motion";
 import {
+  ArrowLeft,
   ArrowRight,
   Bot,
   BookOpen,
   CalendarCheck,
   CheckCircle2,
+  ChevronRight,
   Dices,
   Flame,
   Gamepad2,
@@ -68,6 +70,19 @@ type Playing = {
   retry?: () => void;
 };
 type ActiveActivity = "flashcards" | "true_false" | "match" | null;
+const ACTIVITY_TITLES: Record<Exclude<ActiveActivity, null>, string> = {
+  flashcards: "Flashcards",
+  true_false: "True / False Sprint",
+  match: "Match Pairs",
+};
+
+const SECTION_LINKS: { section: PracticeSection; href: string }[] = [
+  { section: "chapters", href: "/mocks" },
+  { section: "agent", href: "/gemma-questions" },
+  { section: "notes", href: "/notes" },
+  { section: "activities", href: "/activities" },
+  { section: "scoreboard", href: "/scoreboard" },
+];
 
 const SECTIONS: Record<PracticeSection, { label: string; icon: React.ElementType; blurb: string }> = {
   chapters: {
@@ -236,6 +251,7 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
   if (playing) {
     return (
       <div className="mx-auto max-w-3xl">
+        <SubpageBar section={meta.label} title={playing.title} onBack={exit} />
         <QuizPlayer
           key={`${playing.title}-${playing.questions[0]?.id ?? ""}-${playing.questions.length}`}
           title={playing.title}
@@ -255,6 +271,7 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
     const props = { classLevel, subject, email, onExit: exit };
     return (
       <div className="mx-auto max-w-4xl">
+        <SubpageBar section={meta.label} title={ACTIVITY_TITLES[activity]} onBack={exit} />
         {activity === "flashcards" ? <FlashcardsActivity {...props} initialChapter={flashChapter} /> : null}
         {activity === "true_false" ? <TrueFalseSprint {...props} /> : null}
         {activity === "match" ? <MatchPairs {...props} /> : null}
@@ -318,12 +335,12 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
               className="group flex items-center gap-5 rounded-[24px] border border-white/10 bg-white/[0.04] p-4 pr-6 backdrop-blur transition-colors duration-200 hover:border-accent/50 hover:bg-white/[0.07]"
             >
               <ProgressRing value={level.progress} size={88} stroke={7} dark>
-                <span className="font-heading text-xl font-bold leading-none">{board.totalPoints}</span>
+                <span className="font-heading text-xl font-bold leading-none text-white">{board.totalPoints}</span>
                 <span className="mt-0.5 text-[10px] uppercase tracking-wider text-zinc-400">pts</span>
               </ProgressRing>
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Level</p>
-                <p className="font-heading text-lg font-bold">{level.name}</p>
+                <p className="font-heading text-lg font-bold text-white">{level.name}</p>
                 <div className="mt-2 flex items-center gap-3 text-xs text-zinc-300">
                   <span className="inline-flex items-center gap-1">
                     <Flame className={cn("h-3.5 w-3.5", streak ? "text-warning" : "text-zinc-500")} /> {streak}-day streak
@@ -485,6 +502,31 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
 
         {section === "scoreboard" ? <Scoreboard board={board} classLevel={classLevel} subject={subject} /> : null}
 
+        <nav aria-label="More practice" className="pt-2">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">Keep going</p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {SECTION_LINKS.filter((l) => l.section !== section).map((l) => {
+              const s = SECTIONS[l.section];
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="group flex items-center gap-3 rounded-2xl border border-border bg-white p-3.5 transition-[border-color,box-shadow] duration-200 hover:border-accent/40 hover:shadow-[var(--shadow-hover)]"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background-secondary text-foreground-heading transition-colors duration-200 group-hover:bg-primary group-hover:text-accent-light">
+                    <s.icon className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-foreground-heading">{s.label}</span>
+                    <span className="block truncate text-xs text-muted">{s.blurb}</span>
+                  </span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-disabled transition-[color,transform] duration-200 group-hover:translate-x-0.5 group-hover:text-accent" />
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+
         <p className="flex items-center gap-2 text-[11px] text-muted">
           <BookOpen className="h-3.5 w-3.5 shrink-0" />
           Syllabus follows the CBSE {SYLLABUS_SESSION} curriculum and current NCERT books. Gemma-generated questions are labelled and always show
@@ -492,6 +534,23 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
         </p>
       </div>
     </MotionConfig>
+  );
+}
+
+function SubpageBar({ section, title, onBack }: { section: string; title: string; onBack: () => void }) {
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-3">
+      <Button variant="outline" size="sm" onClick={onBack}>
+        <ArrowLeft className="h-4 w-4" /> Back to {section}
+      </Button>
+      <p className="flex min-w-0 items-center gap-1 text-sm text-muted">
+        <button type="button" onClick={onBack} className="cursor-pointer hover:text-accent">
+          {section}
+        </button>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-disabled" aria-hidden />
+        <span className="truncate font-semibold text-foreground-heading">{title}</span>
+      </p>
+    </div>
   );
 }
 

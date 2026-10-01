@@ -35,21 +35,21 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold text-white">Legal</h4>
+            <h4 className="font-semibold text-white">Account</h4>
             <ul className="mt-4 space-y-2.5 text-sm text-white/60">
               <li>
-                <a href="#" className="transition-colors hover:text-accent-light">
-                  Privacy
-                </a>
+                <Link href="/login" className="transition-colors hover:text-accent-light">
+                  Sign in
+                </Link>
               </li>
               <li>
-                <a href="#" className="transition-colors hover:text-accent-light">
-                  Contact
-                </a>
+                <Link href="/dashboard" className="transition-colors hover:text-accent-light">
+                  Open dashboard
+                </Link>
               </li>
               <li>
                 <a
-                  href="https://github.com"
+                  href="https://github.com/srivarshiniur2025-dev/gemma-hackathon-to-ai-career-copilot"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 transition-colors hover:text-accent-light"
