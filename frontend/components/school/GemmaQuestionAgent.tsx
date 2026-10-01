@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Bot, RotateCcw, Sparkles, Trash2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { api, type GemmaSchoolQuestion } from "@/lib/api";
 import { questionsForChapter, type SchoolQuestion } from "@/lib/school/questions";
 import { bumpCounter } from "@/lib/school/scoreboard";
 import {
@@ -38,7 +38,7 @@ const REFERENCE_OPTIONS = [
   "My own notes",
 ];
 
-type SavedSet = {
+export type SavedSet = {
   id: string;
   title: string;
   chapterId: string;
@@ -50,7 +50,7 @@ function setsKey(email?: string) {
   return `careerCopilotSchoolSets:${(email || "guest").toLowerCase()}`;
 }
 
-function loadSets(email?: string): SavedSet[] {
+export function loadSets(email?: string): SavedSet[] {
   if (typeof window === "undefined") return [];
   try {
     return JSON.parse(window.localStorage.getItem(setsKey(email)) || "[]") as SavedSet[];
@@ -59,8 +59,28 @@ function loadSets(email?: string): SavedSet[] {
   }
 }
 
-function storeSets(email: string | undefined, sets: SavedSet[]) {
+export function storeSets(email: string | undefined, sets: SavedSet[]) {
   window.localStorage.setItem(setsKey(email), JSON.stringify(sets.slice(0, 12)));
+  window.dispatchEvent(new Event("school-sets-updated"));
+}
+
+export function toSchoolQuestions(
+  items: (GemmaSchoolQuestion & { chapter_id?: string | null })[],
+  fallbackChapterId: string
+): SchoolQuestion[] {
+  const stamp = Date.now();
+  return items.map((q, i) => ({
+    id: `gemma-${stamp}-${i}`,
+    chapterId: q.chapter_id || fallbackChapterId,
+    difficulty: (["easy", "medium", "hard"].includes(q.difficulty) ? q.difficulty : "medium") as SchoolQuestion["difficulty"],
+    question: q.question,
+    options: q.options,
+    answerIndex: q.answer_index,
+    explanation: q.explanation,
+    reference: q.reference,
+    syllabusPoint: q.syllabus_point,
+    source: "gemma",
+  }));
 }
 
 type Props = {
@@ -91,7 +111,12 @@ export function GemmaQuestionAgent({ classLevel, subject, email, onPlay }: Props
 
   const chapter = chapterId ? schoolChapterById(chapterId) : undefined;
 
-  useEffect(() => setSaved(loadSets(email)), [email]);
+  useEffect(() => {
+    const refresh = () => setSaved(loadSets(email));
+    refresh();
+    window.addEventListener("school-sets-updated", refresh);
+    return () => window.removeEventListener("school-sets-updated", refresh);
+  }, [email]);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [step]);
@@ -136,18 +161,7 @@ export function GemmaQuestionAgent({ classLevel, subject, email, onPlay }: Props
         own_notes: references.includes("My own notes") && ownNotes.trim() ? ownNotes.trim() : undefined,
       });
       const stamp = Date.now();
-      const questions: SchoolQuestion[] = res.questions.map((q, i) => ({
-        id: `gemma-${stamp}-${i}`,
-        chapterId: chapter.id,
-        difficulty: (["easy", "medium", "hard"].includes(q.difficulty) ? q.difficulty : "medium") as SchoolQuestion["difficulty"],
-        question: q.question,
-        options: q.options,
-        answerIndex: q.answer_index,
-        explanation: q.explanation,
-        reference: q.reference,
-        syllabusPoint: q.syllabus_point,
-        source: "gemma",
-      }));
+      const questions = toSchoolQuestions(res.questions, chapter.id);
       const title = `Gemma · ${chapter.name} (${difficulty})`;
       const set: SavedSet = { id: `${stamp}`, title, chapterId: chapter.id, createdAt: new Date().toISOString(), questions };
       const nextSets = [set, ...saved];

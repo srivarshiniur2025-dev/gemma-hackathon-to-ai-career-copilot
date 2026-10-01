@@ -42,6 +42,10 @@ function read<T>(key: string, fallback: T): T {
   }
 }
 
+export function loadNotePrefs(email?: string): string[] {
+  return read<string[]>(prefsKey(email), []);
+}
+
 type Props = { classLevel: SchoolClass; subject: SchoolSubject; email?: string };
 
 export function GemmaNotes({ classLevel, subject, email }: Props) {
@@ -56,8 +60,6 @@ export function GemmaNotes({ classLevel, subject, email }: Props) {
   const [prefs, setPrefs] = useState<string[]>([]);
   const [saved, setSaved] = useState<SavedNote[]>([]);
   const [rated, setRated] = useState<"up" | "down" | null>(null);
-  const [revealed, setRevealed] = useState<number[]>([]);
-
   const chapter = schoolChapterById(chapterId);
 
   useEffect(() => {
@@ -84,7 +86,6 @@ export function GemmaNotes({ classLevel, subject, email }: Props) {
     setLoading(true);
     setError(null);
     setRated(null);
-    setRevealed([]);
     try {
       const res = await api.generateSchoolNotes({
         class_level: classLevel,
@@ -250,60 +251,7 @@ export function GemmaNotes({ classLevel, subject, email }: Props) {
           </div>
         ) : (
           <article className="space-y-5">
-            <header>
-              <h2 className="font-heading text-2xl font-bold text-foreground-heading">{notes.title}</h2>
-              {notes.summary ? <p className="mt-2 text-sm leading-relaxed text-foreground">{notes.summary}</p> : null}
-            </header>
-
-            {notes.sections.map((s) => (
-              <section key={s.heading}>
-                <h3 className="text-sm font-bold uppercase tracking-wide text-accent">{s.heading}</h3>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-foreground">
-                  {s.points.map((p) => (
-                    <li key={p}>{p}</li>
-                  ))}
-                </ul>
-              </section>
-            ))}
-
-            {notes.key_terms.length ? (
-              <section>
-                <h3 className="text-sm font-bold uppercase tracking-wide text-accent">Key terms</h3>
-                <dl className="mt-2 grid gap-2 sm:grid-cols-2">
-                  {notes.key_terms.map((k) => (
-                    <div key={k.term} className="rounded-2xl bg-background-secondary p-3">
-                      <dt className="text-sm font-semibold text-foreground-heading">{k.term}</dt>
-                      <dd className="text-xs text-muted">{k.meaning}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </section>
-            ) : null}
-
-            <NoteList title="Formulas" items={notes.formulas} tone="bg-sky-50 text-sky-900" />
-            <NoteList title="Examples" items={notes.examples} />
-            <NoteList title="Common mistakes" items={notes.mistakes} tone="bg-rose-50 text-rose-900" />
-            <NoteList title="Memory tricks" items={notes.memory_tricks} tone="bg-amber-50 text-amber-900" />
-            <NoteList title="Exam tips" items={notes.exam_tips} tone="bg-emerald-50 text-emerald-900" />
-
-            {notes.quick_check.length ? (
-              <section>
-                <h3 className="text-sm font-bold uppercase tracking-wide text-accent">Quick self-check</h3>
-                <div className="mt-2 space-y-2">
-                  {notes.quick_check.map((qc, i) => (
-                    <button
-                      key={qc.q}
-                      type="button"
-                      onClick={() => setRevealed((r) => (r.includes(i) ? r : [...r, i]))}
-                      className="w-full rounded-2xl border border-border p-3 text-left text-sm"
-                    >
-                      <p className="font-medium text-foreground-heading">{qc.q}</p>
-                      <p className="mt-1 text-xs text-muted">{revealed.includes(i) ? qc.a : "Tap to reveal the answer"}</p>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            ) : null}
+            <NotesBody key={notes.title + notes.summary} notes={notes} />
 
             <footer className="rounded-2xl border border-dashed border-border p-4">
               <p className="text-sm font-semibold text-foreground-heading">How were these notes?</p>
@@ -337,6 +285,70 @@ export function GemmaNotes({ classLevel, subject, email }: Props) {
           </article>
         )}
       </div>
+    </div>
+  );
+}
+
+export function NotesBody({ notes, compact = false }: { notes: SchoolNotes; compact?: boolean }) {
+  const [revealed, setRevealed] = useState<number[]>([]);
+  return (
+    <div className="space-y-5">
+      <header>
+        <h2 className={compact ? "font-heading text-lg font-bold text-foreground-heading" : "font-heading text-2xl font-bold text-foreground-heading"}>
+          {notes.title}
+        </h2>
+        {notes.summary ? <p className="mt-2 text-sm leading-relaxed text-foreground">{notes.summary}</p> : null}
+      </header>
+
+      {notes.sections.map((s) => (
+        <section key={s.heading}>
+          <h3 className="text-sm font-bold uppercase tracking-wide text-accent">{s.heading}</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-foreground">
+            {s.points.map((p) => (
+              <li key={p}>{p}</li>
+            ))}
+          </ul>
+        </section>
+      ))}
+
+      {notes.key_terms.length ? (
+        <section>
+          <h3 className="text-sm font-bold uppercase tracking-wide text-accent">Key terms</h3>
+          <dl className="mt-2 grid gap-2 sm:grid-cols-2">
+            {notes.key_terms.map((k) => (
+              <div key={k.term} className="rounded-2xl bg-background-secondary p-3">
+                <dt className="text-sm font-semibold text-foreground-heading">{k.term}</dt>
+                <dd className="text-xs text-muted">{k.meaning}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
+
+      <NoteList title="Formulas" items={notes.formulas} tone="bg-sky-50 text-sky-900" />
+      <NoteList title="Examples" items={notes.examples} />
+      <NoteList title="Common mistakes" items={notes.mistakes} tone="bg-rose-50 text-rose-900" />
+      <NoteList title="Memory tricks" items={notes.memory_tricks} tone="bg-amber-50 text-amber-900" />
+      <NoteList title="Exam tips" items={notes.exam_tips} tone="bg-emerald-50 text-emerald-900" />
+
+      {notes.quick_check.length ? (
+        <section>
+          <h3 className="text-sm font-bold uppercase tracking-wide text-accent">Quick self-check</h3>
+          <div className="mt-2 space-y-2">
+            {notes.quick_check.map((qc, i) => (
+              <button
+                key={qc.q}
+                type="button"
+                onClick={() => setRevealed((r) => (r.includes(i) ? r : [...r, i]))}
+                className="w-full rounded-2xl border border-border p-3 text-left text-sm"
+              >
+                <p className="font-medium text-foreground-heading">{qc.q}</p>
+                <p className="mt-1 text-xs text-muted">{revealed.includes(i) ? qc.a : "Tap to reveal the answer"}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

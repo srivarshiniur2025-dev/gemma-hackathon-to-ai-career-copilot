@@ -42,7 +42,8 @@ import {
 } from "@/lib/school/syllabus";
 import { cn } from "@/lib/utils";
 import { FlashcardsActivity, MatchPairs, TrueFalseSprint } from "./Activities";
-import { GemmaNotes } from "./GemmaNotes";
+import { GemmaChat } from "./GemmaChat";
+import { GemmaNotes, loadNotePrefs } from "./GemmaNotes";
 import { GemmaQuestionAgent } from "./GemmaQuestionAgent";
 import { QuizPlayer } from "./QuizPlayer";
 import { Scoreboard, currentStreak } from "./Scoreboard";
@@ -121,6 +122,7 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
   const [flashChapter, setFlashChapter] = useState("all");
   const [board, setBoard] = useState<SchoolScoreboard>(emptyScoreboard);
   const [difficulty, setDifficulty] = useState<SchoolDifficulty | "all">("all");
+  const [gemmaView, setGemmaView] = useState<"chat" | "guided">("chat");
 
   const grade = answers?.grade;
   const hardSubject = answers?.hard_subject;
@@ -390,16 +392,51 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
         </div>
       ) : null}
 
-      {section === "agent" ? (
-        <GemmaQuestionAgent
-          classLevel={classLevel}
-          subject={subject}
-          email={email}
-          onPlay={(title, questions, chapterId) => setPlaying({ title, questions, kind: "gemma_quiz", chapterId })}
-        />
-      ) : null}
+      {section === "agent" || section === "notes" ? (
+        <div className="space-y-4">
+          <div className="inline-flex rounded-full border border-border bg-white p-1">
+            {(
+              [
+                ["chat", "Chat freely"],
+                ["guided", section === "agent" ? "Step-by-step builder" : "Notes builder"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setGemmaView(value)}
+                className={cn(
+                  "rounded-full px-4 py-1.5 text-sm font-semibold transition-colors",
+                  gemmaView === value ? "bg-violet-600 text-white" : "text-muted hover:text-foreground-heading"
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-      {section === "notes" ? <GemmaNotes classLevel={classLevel} subject={subject} email={email} /> : null}
+          {gemmaView === "chat" ? (
+            <GemmaChat
+              key={`${section}-${classLevel}-${subject}`}
+              mode={section === "agent" ? "questions" : "notes"}
+              classLevel={classLevel}
+              subject={subject}
+              email={email}
+              preferences={section === "notes" ? loadNotePrefs(email) : []}
+              onPlay={(title, questions, chapterId) => setPlaying({ title, questions, kind: "gemma_quiz", chapterId })}
+            />
+          ) : section === "agent" ? (
+            <GemmaQuestionAgent
+              classLevel={classLevel}
+              subject={subject}
+              email={email}
+              onPlay={(title, questions, chapterId) => setPlaying({ title, questions, kind: "gemma_quiz", chapterId })}
+            />
+          ) : (
+            <GemmaNotes classLevel={classLevel} subject={subject} email={email} />
+          )}
+        </div>
+      ) : null}
 
       {section === "activities" ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

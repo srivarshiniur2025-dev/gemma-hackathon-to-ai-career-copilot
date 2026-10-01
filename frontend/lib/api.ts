@@ -281,6 +281,38 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  schoolChat: (body: {
+    mode: "questions" | "notes";
+    class_level: 9 | 10;
+    subject: "science" | "maths";
+    book: string;
+    chapters: {
+      id: string;
+      number: number;
+      name: string;
+      key_topics: string[];
+      excluded: string[];
+      internal_only: boolean;
+    }[];
+    focus_chapter_id?: string;
+    message: string;
+    history: { role: "user" | "assistant"; content: string }[];
+    preferences: string[];
+  }) =>
+    request<SchoolChatResponse>("/api/school/chat", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+};
+
+export type SchoolChatResponse = {
+  reply: string;
+  action: "chat" | "questions" | "notes";
+  chapter_id: string | null;
+  questions: (GemmaSchoolQuestion & { chapter_id?: string | null })[];
+  notes: SchoolNotes | null;
+  model?: string;
 };
 
 export type SchoolChapterRequest = {
