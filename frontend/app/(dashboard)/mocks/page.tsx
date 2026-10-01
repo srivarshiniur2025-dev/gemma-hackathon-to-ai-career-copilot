@@ -18,7 +18,7 @@ function MocksInner() {
   }, [loading, profile, router]);
 
   if (!showsExamMocks(profile)) return null;
-  if (exp === "school") return <SchoolPractice />;
+  if (exp === "school") return <SchoolPractice section="chapters" />;
   return <MockCatalog audience={exp === "neet" ? "neet" : "school"} experience={exp} />;
 }
 

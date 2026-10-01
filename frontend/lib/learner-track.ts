@@ -46,8 +46,30 @@ export function showsExamMocks(profile: Profile | null | undefined): boolean {
 export type NavItem = {
   href: string;
   label: string;
-  icon: "dashboard" | "assessment" | "mocks" | "roadmap" | "planner" | "resume" | "internships" | "interview" | "progress" | "settings";
+  icon:
+    | "dashboard"
+    | "assessment"
+    | "mocks"
+    | "agent"
+    | "notes"
+    | "activities"
+    | "scoreboard"
+    | "roadmap"
+    | "planner"
+    | "resume"
+    | "internships"
+    | "interview"
+    | "progress"
+    | "settings";
 };
+
+export const SCHOOL_PRACTICE_NAV: NavItem[] = [
+  { href: "/mocks", label: "Chapter Tests", icon: "mocks" },
+  { href: "/gemma-questions", label: "Gemma Questions", icon: "agent" },
+  { href: "/notes", label: "Gemma Notes", icon: "notes" },
+  { href: "/activities", label: "Activities", icon: "activities" },
+  { href: "/scoreboard", label: "My Scoreboard", icon: "scoreboard" },
+];
 
 export function navItemsForProfile(profile: Profile | null | undefined): NavItem[] {
   const exp = experienceForProfile(profile);
@@ -55,6 +77,8 @@ export function navItemsForProfile(profile: Profile | null | undefined): NavItem
 
   if (exp === "developer") {
     items.push({ href: "/assessment", label: "Skill Assessments", icon: "assessment" });
+  } else if (exp === "school") {
+    items.push(...SCHOOL_PRACTICE_NAV);
   } else {
     items.push({
       href: "/mocks",

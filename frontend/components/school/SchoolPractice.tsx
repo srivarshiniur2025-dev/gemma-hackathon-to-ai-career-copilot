@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Bot,
   BookOpen,
@@ -46,7 +47,7 @@ import { GemmaQuestionAgent } from "./GemmaQuestionAgent";
 import { QuizPlayer } from "./QuizPlayer";
 import { Scoreboard, currentStreak } from "./Scoreboard";
 
-type Tab = "chapters" | "agent" | "notes" | "activities" | "scoreboard";
+export type PracticeSection = "chapters" | "agent" | "notes" | "activities" | "scoreboard";
 type Playing = {
   title: string;
   questions: SchoolQuestion[];
@@ -57,23 +58,64 @@ type Playing = {
 };
 type ActiveActivity = "flashcards" | "true_false" | "match" | null;
 
-const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: "chapters", label: "Chapter Tests", icon: ListChecks },
-  { id: "agent", label: "Gemma Question Agent", icon: Bot },
-  { id: "notes", label: "Gemma Notes", icon: NotebookPen },
-  { id: "activities", label: "Activities", icon: Gamepad2 },
-  { id: "scoreboard", label: "My Scoreboard", icon: Trophy },
-];
+const SECTIONS: Record<PracticeSection, { label: string; icon: React.ElementType; blurb: string; tone: string }> = {
+  chapters: {
+    label: "Chapter Tests",
+    icon: ListChecks,
+    blurb: "Every test uses only questions from the chapter you pick.",
+    tone: "from-sky-500 via-violet-500 to-fuchsia-500",
+  },
+  agent: {
+    label: "Gemma Questions",
+    icon: Bot,
+    blurb: "Tell Gemma your chapter, topics, difficulty and references — it writes a fresh practice set.",
+    tone: "from-violet-600 via-indigo-500 to-sky-500",
+  },
+  notes: {
+    label: "Gemma Notes",
+    icon: NotebookPen,
+    blurb: "Teacher-style revision notes grounded in your NCERT chapter. Rate them and Gemma adapts.",
+    tone: "from-emerald-500 via-teal-500 to-sky-500",
+  },
+  activities: {
+    label: "Activities",
+    icon: Gamepad2,
+    blurb: "Flashcards, quick quizzes and games that earn points for your scoreboard.",
+    tone: "from-orange-400 via-rose-500 to-fuchsia-500",
+  },
+  scoreboard: {
+    label: "My Scoreboard",
+    icon: Trophy,
+    blurb: "Your points, level, badges, streak and chapter mastery.",
+    tone: "from-amber-400 via-orange-500 to-rose-500",
+  },
+};
 
-export function SchoolPractice() {
+type Pick = { classLevel: SchoolClass; subject: SchoolSubject };
+const pickKey = (email?: string) => `careerCopilotSchoolPick:${(email || "guest").toLowerCase()}`;
+
+function loadPick(email?: string): Pick | null {
+  try {
+    const raw = window.localStorage.getItem(pickKey(email));
+    const parsed = raw ? (JSON.parse(raw) as Pick) : null;
+    if (parsed && (parsed.classLevel === 9 || parsed.classLevel === 10) && (parsed.subject === "science" || parsed.subject === "maths")) {
+      return parsed;
+    }
+  } catch {
+    /* ignore corrupt value */
+  }
+  return null;
+}
+
+export function SchoolPractice({ section }: { section: PracticeSection }) {
   const { user } = useAuth();
   const { profile } = useCareerProfile();
   const email = user?.email ?? undefined;
   const answers = profile?.onboarding_answers;
+  const meta = SECTIONS[section];
 
   const [classLevel, setClassLevel] = useState<SchoolClass>(() => classFromAnswers(answers));
   const [subject, setSubject] = useState<SchoolSubject>(() => subjectFromAnswers(answers));
-  const [tab, setTab] = useState<Tab>("chapters");
   const [playing, setPlaying] = useState<Playing | null>(null);
   const [activity, setActivity] = useState<ActiveActivity>(null);
   const [flashChapter, setFlashChapter] = useState("all");
@@ -83,9 +125,17 @@ export function SchoolPractice() {
   const grade = answers?.grade;
   const hardSubject = answers?.hard_subject;
   useEffect(() => {
-    setClassLevel(classFromAnswers({ grade: grade ?? "" }));
-    setSubject(subjectFromAnswers({ hard_subject: hardSubject ?? "" }));
-  }, [grade, hardSubject]);
+    const saved = loadPick(email);
+    setClassLevel(saved?.classLevel ?? classFromAnswers({ grade: grade ?? "" }));
+    setSubject(saved?.subject ?? subjectFromAnswers({ hard_subject: hardSubject ?? "" }));
+  }, [email, grade, hardSubject]);
+
+  const choose = (next: Partial<Pick>) => {
+    const value: Pick = { classLevel: next.classLevel ?? classLevel, subject: next.subject ?? subject };
+    setClassLevel(value.classLevel);
+    setSubject(value.subject);
+    window.localStorage.setItem(pickKey(email), JSON.stringify(value));
+  };
 
   useEffect(() => {
     const refresh = () => setBoard(loadScoreboard(email));
@@ -182,22 +232,29 @@ export function SchoolPractice() {
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-[32px] bg-gradient-to-br from-sky-500 via-violet-500 to-fuchsia-500 p-6 text-white shadow-[var(--shadow-lg)] sm:p-8">
+      <section
+        className={cn(
+          "overflow-hidden rounded-[32px] bg-gradient-to-br p-6 text-white shadow-[var(--shadow-lg)] sm:p-8",
+          meta.tone
+        )}
+      >
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">Chapter Practice · {SYLLABUS_SESSION}</p>
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
+              <meta.icon className="h-4 w-4" /> {meta.label} · {SYLLABUS_SESSION}
+            </p>
             <h1 className="mt-2 font-heading text-3xl font-bold sm:text-4xl">
               Class {classLevel} {subjectLabel(subject)}
             </h1>
             <p className="mt-2 text-sm text-white/85">
-              Every test uses only questions from the chapter you pick, aligned to {SYLLABUS_BOOKS[`${classLevel}-${subject}`]}.
+              {meta.blurb} Aligned to {SYLLABUS_BOOKS[`${classLevel}-${subject}`]}.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               {([9, 10] as SchoolClass[]).map((c) => (
                 <button
                   key={c}
                   type="button"
-                  onClick={() => setClassLevel(c)}
+                  onClick={() => choose({ classLevel: c })}
                   className={cn(
                     "rounded-full px-4 py-1.5 text-xs font-bold transition-colors",
                     classLevel === c ? "bg-white text-violet-700" : "bg-white/15 text-white hover:bg-white/25"
@@ -211,7 +268,7 @@ export function SchoolPractice() {
                 <button
                   key={s}
                   type="button"
-                  onClick={() => setSubject(s)}
+                  onClick={() => choose({ subject: s })}
                   className={cn(
                     "rounded-full px-4 py-1.5 text-xs font-bold transition-colors",
                     subject === s ? "bg-white text-violet-700" : "bg-white/15 text-white hover:bg-white/25"
@@ -222,9 +279,8 @@ export function SchoolPractice() {
               ))}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setTab("scoreboard")}
+          <Link
+            href="/scoreboard"
             className="min-w-[220px] rounded-[24px] bg-white/15 p-4 text-left backdrop-blur transition-colors hover:bg-white/20"
           >
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-white/80">
@@ -237,27 +293,11 @@ export function SchoolPractice() {
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/25">
               <div className="h-full rounded-full bg-white" style={{ width: `${level.progress}%` }} />
             </div>
-          </button>
+          </Link>
         </div>
       </section>
 
-      <nav className="flex gap-2 overflow-x-auto pb-1">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={cn(
-              "inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
-              tab === t.id ? "border-violet-500 bg-violet-600 text-white" : "border-border bg-white text-foreground hover:border-violet-300"
-            )}
-          >
-            <t.icon className="h-4 w-4" /> {t.label}
-          </button>
-        ))}
-      </nav>
-
-      {tab === "chapters" ? (
+      {section === "chapters" ? (
         <div className="space-y-5">
           <div
             className={cn(
@@ -350,7 +390,7 @@ export function SchoolPractice() {
         </div>
       ) : null}
 
-      {tab === "agent" ? (
+      {section === "agent" ? (
         <GemmaQuestionAgent
           classLevel={classLevel}
           subject={subject}
@@ -359,9 +399,9 @@ export function SchoolPractice() {
         />
       ) : null}
 
-      {tab === "notes" ? <GemmaNotes classLevel={classLevel} subject={subject} email={email} /> : null}
+      {section === "notes" ? <GemmaNotes classLevel={classLevel} subject={subject} email={email} /> : null}
 
-      {tab === "activities" ? (
+      {section === "activities" ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <ActivityTile
             icon={Zap}
@@ -411,7 +451,7 @@ export function SchoolPractice() {
         </div>
       ) : null}
 
-      {tab === "scoreboard" ? <Scoreboard board={board} classLevel={classLevel} subject={subject} /> : null}
+      {section === "scoreboard" ? <Scoreboard board={board} classLevel={classLevel} subject={subject} /> : null}
 
       <p className="flex items-center gap-2 text-[11px] text-muted">
         <BookOpen className="h-3.5 w-3.5" />

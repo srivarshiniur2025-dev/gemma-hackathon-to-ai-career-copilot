@@ -4,18 +4,22 @@ import type { ComponentType } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  Bot,
   Briefcase,
   CalendarDays,
   ClipboardCheck,
   FileText,
   FlaskConical,
+  Gamepad2,
   LayoutDashboard,
   LogOut,
   Map,
   Menu,
   Mic,
+  NotebookPen,
   Settings,
   TrendingUp,
+  Trophy,
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +33,10 @@ const ICONS: Record<NavItem["icon"], ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard,
   assessment: ClipboardCheck,
   mocks: FlaskConical,
+  agent: Bot,
+  notes: NotebookPen,
+  activities: Gamepad2,
+  scoreboard: Trophy,
   roadmap: Map,
   planner: CalendarDays,
   resume: FileText,
