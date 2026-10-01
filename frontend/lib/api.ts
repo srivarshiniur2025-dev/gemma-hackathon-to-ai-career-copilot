@@ -259,4 +259,62 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ events, replace }),
     }),
+
+  generateSchoolQuestions: (body: SchoolChapterRequest & {
+    difficulty: "easy" | "medium" | "hard" | "mixed";
+    count: number;
+    references: string[];
+    recommendation?: string;
+    own_notes?: string;
+  }) =>
+    request<{ questions: GemmaSchoolQuestion[]; model: string }>("/api/school/generate-questions", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  generateSchoolNotes: (body: SchoolChapterRequest & {
+    style: "short" | "standard" | "detailed";
+    preferences: string[];
+    request?: string;
+  }) =>
+    request<SchoolNotes>("/api/school/notes", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+};
+
+export type SchoolChapterRequest = {
+  class_level: 9 | 10;
+  subject: "science" | "maths";
+  chapter_id: string;
+  chapter_number: number;
+  chapter_name: string;
+  book: string;
+  key_topics: string[];
+  topics: string[];
+  excluded: string[];
+};
+
+export type GemmaSchoolQuestion = {
+  question: string;
+  options: string[];
+  answer_index: number;
+  explanation: string;
+  reference: string;
+  syllabus_point: string;
+  difficulty: string;
+};
+
+export type SchoolNotes = {
+  title: string;
+  summary: string;
+  sections: { heading: string; points: string[] }[];
+  key_terms: { term: string; meaning: string }[];
+  formulas: string[];
+  examples: string[];
+  mistakes: string[];
+  memory_tricks: string[];
+  exam_tips: string[];
+  quick_check: { q: string; a: string }[];
+  model?: string;
 };

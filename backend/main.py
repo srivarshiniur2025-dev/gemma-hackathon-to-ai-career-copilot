@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from backend.auth import init_firebase
 from backend.config import settings
 from backend.database import close_db, get_db, set_mongo_available
-from backend.routers import assessment, chat, health, internships, interview, interview_simulation, planner, resume, roadmap, users
+from backend.routers import assessment, chat, health, internships, interview, interview_simulation, planner, resume, roadmap, school, users
 from backend.services.gemma import GemmaAuthError, GemmaNetworkError, GemmaRateLimitError
 
 API_PREFIX = "/api"
@@ -68,5 +68,6 @@ app.include_router(interview.router, prefix=API_PREFIX)
 app.include_router(interview_simulation.router, prefix=API_PREFIX)
 app.include_router(chat.router, prefix=API_PREFIX)
 app.include_router(planner.router, prefix=API_PREFIX)
+app.include_router(school.router, prefix=API_PREFIX)
 
 app.websocket("/ws/interview/{session_id}")(interview_simulation.interview_websocket)

@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MockCatalog } from "@/components/mocks/MockCatalog";
+import { SchoolPractice } from "@/components/school/SchoolPractice";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { experienceForProfile, showsExamMocks } from "@/lib/learner-track";
 
@@ -17,7 +18,7 @@ function MocksInner() {
   }, [loading, profile, router]);
 
   if (!showsExamMocks(profile)) return null;
-  // `high_school` should use the "school" (Class 9–10) question set in our catalog.
+  if (exp === "school") return <SchoolPractice />;
   return <MockCatalog audience={exp === "neet" ? "neet" : "school"} experience={exp} />;
 }
 

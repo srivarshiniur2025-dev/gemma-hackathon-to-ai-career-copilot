@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, Flame, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Flame, Sparkles, Trophy } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
+import { levelFor, loadScoreboard } from "@/lib/school/scoreboard";
+import { SYLLABUS_SESSION } from "@/lib/school/syllabus";
 import { CATALOG_COUNTS } from "@/lib/neet/catalog";
 import { loadMockProgress, mockStats } from "@/lib/neet/progress";
 import { loadSkillProgress, skillStats } from "@/lib/skills/progress";
@@ -13,14 +16,25 @@ import { Button } from "@/components/ui/button";
 
 export function TrackHero() {
   const { displayName, profile, career } = useCareerProfile();
+  const { user } = useAuth();
   const exp = experienceForProfile(profile);
   const first = displayName.split(" ")[0];
   const [completed, setCompleted] = useState(0);
   const [pyq, setPyq] = useState(0);
   const [skillCompleted, setSkillCompleted] = useState(0);
   const [skillAvg, setSkillAvg] = useState(0);
+  const [school, setSchool] = useState({ points: 0, level: "Curious Starter", mastered: 0 });
 
   useEffect(() => {
+    if (exp === "school") {
+      const board = loadScoreboard(user?.email ?? undefined);
+      setSchool({
+        points: board.totalPoints,
+        level: levelFor(board.totalPoints).name,
+        mastered: Object.values(board.chapterMastery).filter((p) => p >= 80).length,
+      });
+      return;
+    }
     if (exp === "developer") {
       const stats = skillStats(loadSkillProgress());
       setSkillCompleted(stats.completed);
@@ -30,7 +44,7 @@ export function TrackHero() {
     const stats = mockStats(loadMockProgress());
     setCompleted(stats.completed);
     setPyq(stats.pyqAccuracy);
-  }, [exp]);
+  }, [exp, user?.email]);
 
   const copy =
     exp === "developer"
@@ -43,8 +57,8 @@ export function TrackHero() {
       : exp === "school"
         ? {
             line: `Make today feel easy, ${first}.`,
-            sub: "Short chapter drills. No interviews. Just clearer science.",
-            cta: "Today's chapter",
+            sub: `${school.level} · chapter tests, Gemma questions & notes, flashcards and games — all on the ${SYLLABUS_SESSION} syllabus.`,
+            cta: "Open Chapter Practice",
             href: "/mocks",
           }
         : {
@@ -64,6 +78,12 @@ export function TrackHero() {
           { label: "Avg score", value: skillAvg ? `${skillAvg}%` : "—", icon: BookOpen },
           { label: "Streak", value: `${career.streak.count}d`, icon: Flame },
         ]
+      : exp === "school"
+        ? [
+            { label: "Points", value: `${school.points}`, icon: Trophy },
+            { label: "Mastered", value: `${school.mastered}`, icon: BookOpen },
+            { label: "Streak", value: `${career.streak.count}d`, icon: Flame },
+          ]
       : [
           { label: "Mocks", value: `${completed}`, icon: Sparkles },
           { label: "Bank", value: `${CATALOG_COUNTS.neet}+`, icon: BookOpen },

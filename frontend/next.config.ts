@@ -25,6 +25,8 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "framer-motion", "gsap"],
+    // Gemma generations (notes, question sets, resumes) can take over a minute.
+    proxyTimeout: 180_000,
   },
   modularizeImports: {
     "lucide-react": {

@@ -18,7 +18,7 @@ Adaptive assessments, personalized roadmaps, ATS-ready resumes, internship match
 
 | Layer | Technologies |
 |-------|----------------|
-| **AI** | Gemma 4 (`gemma-4-27b-it`) via Google GenAI SDK |
+| **AI** | Gemma 4 (`gemma-4-26b-a4b-it`, fallback `gemma-4-31b-it`) via Google GenAI SDK |
 | **Backend** | Python, FastAPI, MongoDB (Motor) |
 | **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS v4 |
 | **Auth** | Firebase email + Google (local demo if keys are missing) |

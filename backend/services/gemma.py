@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from collections.abc import AsyncIterator, Iterator
 from typing import Any, Literal
 
@@ -43,14 +44,25 @@ class GemmaModelUnavailableError(GemmaError):
     """Raised when no configured Gemma model is available."""
 
 
+_INVALID_ESCAPE = re.compile(r'\\(?!["\\/bfnrtu])')
+
+
+def _loads_lenient(text: str) -> dict:
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Models sometimes emit LaTeX such as \Delta or \frac inside strings.
+        return json.loads(_INVALID_ESCAPE.sub(r"\\\\", text))
+
+
 def parse_json(raw: str) -> dict:
     cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip(), flags=re.IGNORECASE)
     try:
-        return json.loads(cleaned)
+        return _loads_lenient(cleaned)
     except json.JSONDecodeError:
         match = re.search(r"\{.*\}", cleaned, re.DOTALL)
         if match:
-            return json.loads(match.group())
+            return _loads_lenient(match.group())
         raise
 
 
@@ -114,16 +126,24 @@ class GemmaService:
     def _with_model_fallback(self, operation: str, runner):
         last_error: Exception | None = None
         for model in settings.gemma_model_chain:
-            try:
-                result = runner(model)
-                self._active_model = model
-                return result
-            except Exception as exc:
-                mapped = _map_exception(exc)
-                if _is_model_unavailable(mapped) or _is_model_unavailable(exc):
-                    last_error = mapped
-                    continue
-                raise mapped from exc
+            for attempt in range(2):
+                try:
+                    result = runner(model)
+                    self._active_model = model
+                    return result
+                except Exception as exc:
+                    mapped = _map_exception(exc)
+                    if _is_model_unavailable(mapped) or _is_model_unavailable(exc):
+                        last_error = mapped
+                        break
+                    if isinstance(exc, genai_errors.ServerError):
+                        last_error = mapped
+                        if attempt == 0:
+                            time.sleep(1)
+                        continue
+                    raise mapped from exc
+        if isinstance(last_error, GemmaNetworkError):
+            raise last_error
         raise GemmaModelUnavailableError(
             f"All Gemma models unavailable for {operation}: {settings.gemma_model_chain}. "
             f"Last error: {last_error}"
@@ -136,12 +156,14 @@ class GemmaService:
         *,
         temperature: float = 0.7,
         use_google_search: bool = False,
+        fast: bool = False,
     ) -> dict:
         raw = self.generate_text(
             system + JSON_SUFFIX,
             user,
             temperature=temperature,
             use_google_search=use_google_search,
+            fast=fast,
         )
         return parse_json(raw)
 
@@ -152,14 +174,19 @@ class GemmaService:
         *,
         temperature: float = 0.7,
         use_google_search: bool = False,
+        fast: bool = False,
     ) -> str:
-        def _run(model: str) -> str:
+        """`fast` asks for minimal thinking, which cuts latency ~3x for structured, well-specified tasks."""
+
+        def _call(model: str, minimal_thinking: bool) -> str:
             config_kwargs: dict[str, Any] = {
                 "temperature": temperature,
                 "system_instruction": system,
             }
             if use_google_search:
                 config_kwargs["tools"] = [types.Tool(google_search=types.GoogleSearch())]
+            if minimal_thinking:
+                config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_level="MINIMAL")
 
             response = self.client.models.generate_content(
                 model=model,
@@ -167,6 +194,16 @@ class GemmaService:
                 config=types.GenerateContentConfig(**config_kwargs),
             )
             return (response.text or "").strip()
+
+        def _run(model: str) -> str:
+            if not fast:
+                return _call(model, False)
+            try:
+                return _call(model, True)
+            except genai_errors.ClientError as exc:
+                if exc.code == 400 and "thinking" in str(exc).lower():
+                    return _call(model, False)
+                raise
 
         return self._with_model_fallback("generate_text", _run)
 

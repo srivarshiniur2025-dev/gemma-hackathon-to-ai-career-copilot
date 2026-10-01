@@ -19,8 +19,8 @@ class Settings(BaseSettings):
     firebase_project_id: str = ""
     firebase_credentials_path: str = ""
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
-    gemma_model: str = "gemma-4-27b-it"
-    gemma_fallback_models: str = "gemma-4-26b-a4b-it,gemma-4-4b-it"
+    gemma_model: str = "gemma-4-26b-a4b-it"
+    gemma_fallback_models: str = "gemma-4-31b-it"
 
     # Job search — multiple sources aggregated in job_fetcher.py (parallel, deduped).
     # SerpAPI Google Jobs = widest web coverage (LinkedIn, Indeed, Glassdoor, etc.)
