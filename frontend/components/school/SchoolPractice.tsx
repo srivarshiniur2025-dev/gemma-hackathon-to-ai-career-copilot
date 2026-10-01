@@ -283,7 +283,6 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
                 <meta.icon className="h-4 w-4" /> {meta.label} · {SYLLABUS_SESSION}
               </p>
               <h1 className="mt-3 font-heading text-3xl font-bold text-white sm:text-[40px] sm:leading-[1.1]">
-                Class {classLevel}{" "}
                 <span className="bg-gradient-to-r from-accent-light to-teal-200 bg-clip-text text-transparent">
                   {subjectLabel(subject)}
                 </span>
