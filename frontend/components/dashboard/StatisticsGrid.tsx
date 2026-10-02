@@ -3,20 +3,24 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CountUp } from "@/components/dashboard/CountUp";
+import { useAuth } from "@/contexts/AuthContext";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
 import { experienceForProfile } from "@/lib/learner-track";
+import { useSchoolInsights } from "@/lib/school/insights";
 import { loadMockProgress, mockStats } from "@/lib/neet/progress";
 
 const TINTS = [
-  "bg-[#ECFDF5] text-[#047857]",
-  "bg-[#EFF6FF] text-[#1D4ED8]",
-  "bg-[#FFFBEB] text-[#B45309]",
-  "bg-[#F5F3FF] text-[#6D28D9]",
+  "bg-accent/10 text-accent-hover",
+  "bg-primary text-white",
+  "bg-background-secondary text-foreground-heading",
+  "bg-accent text-white",
 ];
 
 export function StatisticsGrid() {
   const { career, profile } = useCareerProfile();
+  const { user } = useAuth();
   const exp = experienceForProfile(profile);
+  const school = useSchoolInsights(user?.email ?? undefined, profile?.onboarding_answers, exp === "school");
   const [mocksDone, setMocksDone] = useState(0);
   const [avg, setAvg] = useState(0);
 
@@ -40,10 +44,10 @@ export function StatisticsGrid() {
         ]
       : exp === "school"
         ? [
-            { label: "Chapter quizzes", value: mocksDone },
-            { label: "Average score", value: avg, suffix: "%" },
-            { label: "Streak days", value: career.streak.count },
-            { label: "Plan weeks", value: Math.max(1, Math.round(career.roadmapDaysRemaining / 7)) },
+            { label: "Quizzes taken", value: school?.quizzesTaken ?? 0 },
+            { label: "Average accuracy", value: school?.accuracy ?? 0, suffix: "%" },
+            { label: "Questions answered", value: school?.questionsAnswered ?? 0 },
+            { label: "Flashcards reviewed", value: school?.board.flashcardsReviewed ?? 0 },
           ]
         : [
             { label: "Mocks completed", value: mocksDone },

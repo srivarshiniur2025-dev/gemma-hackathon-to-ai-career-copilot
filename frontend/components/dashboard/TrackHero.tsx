@@ -6,13 +6,52 @@ import { motion } from "framer-motion";
 import { ArrowRight, BookOpen, Flame, Sparkles, Trophy } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
-import { levelFor, loadScoreboard } from "@/lib/school/scoreboard";
-import { SYLLABUS_SESSION } from "@/lib/school/syllabus";
+import { useSchoolInsights, type SchoolInsights } from "@/lib/school/insights";
+import { SYLLABUS_SESSION, subjectLabel } from "@/lib/school/syllabus";
 import { CATALOG_COUNTS } from "@/lib/neet/catalog";
 import { loadMockProgress, mockStats } from "@/lib/neet/progress";
 import { loadSkillProgress, skillStats } from "@/lib/skills/progress";
 import { dashboardHeading, experienceForProfile } from "@/lib/learner-track";
 import { Button } from "@/components/ui/button";
+
+function schoolCopy(first: string, s: SchoolInsights | null) {
+  const course = s ? `Class ${s.pick.classLevel} ${subjectLabel(s.pick.subject)}` : "your syllabus";
+  if (!s || s.quizzesTaken === 0) {
+    const ch = s?.nextUp?.chapter;
+    return {
+      line: `Let's get started, ${first}.`,
+      sub: `Your first ${course} test takes about 5 minutes. Your accuracy, streak and weak chapters will appear here once you're done (${SYLLABUS_SESSION} syllabus).`,
+      cta: ch ? `Start Ch ${ch.number}: ${ch.name}` : "Open Chapter Practice",
+      href: ch ? `/mocks?chapter=${ch.id}` : "/mocks",
+    };
+  }
+  const acc = s.accuracy != null ? `${s.accuracy}% accuracy` : "";
+  const progress = `${s.level.name} · ${acc} · ${s.testedCount}/${s.chapters.length} ${course} chapters tested · ~${s.daysToExams} days to exams.`;
+  if (s.weakest) {
+    const ch = s.weakest.chapter;
+    return {
+      line: `${s.streak > 1 ? `${s.streak}-day streak, ${first}!` : `Welcome back, ${first}.`} Let's fix Ch ${ch.number}.`,
+      sub: `${ch.name} is at ${s.weakest.mastery}%, your weakest chapter. ${progress}`,
+      cta: `Retake Ch ${ch.number} test`,
+      href: `/mocks?chapter=${ch.id}`,
+    };
+  }
+  if (s.nextUp) {
+    const ch = s.nextUp.chapter;
+    return {
+      line: `Nice work, ${first}. Ch ${ch.number} is next.`,
+      sub: `Every chapter you've tested is above 80%. ${progress}`,
+      cta: `Start Ch ${ch.number}: ${ch.name}`,
+      href: `/mocks?chapter=${ch.id}`,
+    };
+  }
+  return {
+    line: `All of ${course} mastered, ${first}!`,
+    sub: `${progress} Keep it sharp with a Quiz Blitz or try the other subject.`,
+    cta: "Play Quiz Blitz",
+    href: "/activities",
+  };
+}
 
 export function TrackHero() {
   const { displayName, profile, career } = useCareerProfile();
@@ -23,18 +62,10 @@ export function TrackHero() {
   const [pyq, setPyq] = useState(0);
   const [skillCompleted, setSkillCompleted] = useState(0);
   const [skillAvg, setSkillAvg] = useState(0);
-  const [school, setSchool] = useState({ points: 0, level: "Curious Starter", mastered: 0 });
+  const school = useSchoolInsights(user?.email ?? undefined, profile?.onboarding_answers, exp === "school");
 
   useEffect(() => {
-    if (exp === "school") {
-      const board = loadScoreboard(user?.email ?? undefined);
-      setSchool({
-        points: board.totalPoints,
-        level: levelFor(board.totalPoints).name,
-        mastered: Object.values(board.chapterMastery).filter((p) => p >= 80).length,
-      });
-      return;
-    }
+    if (exp === "school") return;
     if (exp === "developer") {
       const stats = skillStats(loadSkillProgress());
       setSkillCompleted(stats.completed);
@@ -55,12 +86,7 @@ export function TrackHero() {
           href: "/assessment",
         }
       : exp === "school"
-        ? {
-            line: `Make today feel easy, ${first}.`,
-            sub: `${school.level} · chapter tests, Gemma questions & notes, flashcards and games — all on the ${SYLLABUS_SESSION} syllabus.`,
-            cta: "Open Chapter Practice",
-            href: "/mocks",
-          }
+        ? schoolCopy(first, school)
         : {
             line: `One mock before you scroll, ${first}.`,
             sub:
@@ -80,9 +106,9 @@ export function TrackHero() {
         ]
       : exp === "school"
         ? [
-            { label: "Points", value: `${school.points}`, icon: Trophy },
-            { label: "Mastered", value: `${school.mastered}`, icon: BookOpen },
-            { label: "Streak", value: `${career.streak.count}d`, icon: Flame },
+            { label: "Points", value: `${school?.points ?? 0}`, icon: Trophy },
+            { label: "Mastered", value: `${school?.masteredCount ?? 0}/${school?.chapters.length ?? 0}`, icon: BookOpen },
+            { label: "Streak", value: `${school?.streak ?? 0}d`, icon: Flame },
           ]
       : [
           { label: "Mocks", value: `${completed}`, icon: Sparkles },
@@ -94,16 +120,16 @@ export function TrackHero() {
     <motion.section
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0D9488] via-[#0F766E] to-[#1E1B4B] p-6 text-white sm:p-8"
+      className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0F766E] via-[#18181B] to-[#09090B] p-6 text-white sm:p-8"
     >
-      <div className="pointer-events-none absolute -right-10 -top-16 h-52 w-52 rounded-full bg-[#F59E0B]/30 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-1/3 h-32 w-32 rounded-full bg-[#8B5CF6]/25 blur-2xl" />
+      <div className="pointer-events-none absolute -right-10 -top-16 h-52 w-52 rounded-full bg-accent-light/25 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-1/3 h-32 w-32 rounded-full bg-accent/20 blur-2xl" />
       <div className="relative flex flex-wrap items-end justify-between gap-6">
         <div className="max-w-xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">
             {dashboardHeading(profile)}
           </p>
-          <h2 className="mt-2 font-heading text-3xl font-bold tracking-tight sm:text-[2.1rem]">{copy.line}</h2>
+          <h2 className="mt-2 font-heading text-3xl font-bold tracking-tight text-white sm:text-[2.1rem]">{copy.line}</h2>
           <p className="mt-2 text-sm leading-relaxed text-white/80">{copy.sub}</p>
           <div className="mt-5">
             <Link href={copy.href}>

@@ -2,7 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 import { useCareerProfile } from "@/contexts/CareerProfileContext";
+import { experienceForProfile } from "@/lib/learner-track";
+import { useSchoolInsights } from "@/lib/school/insights";
 
 const ProductivityBarChart = dynamic(
   () => import("@/components/charts/ProductivityBarChart").then((m) => m.ProductivityBarChart),
@@ -10,7 +13,11 @@ const ProductivityBarChart = dynamic(
 );
 
 export function ProductivityChart() {
-  const { career } = useCareerProfile();
+  const { career, profile } = useCareerProfile();
+  const { user } = useAuth();
+  const isSchool = experienceForProfile(profile) === "school";
+  const school = useSchoolInsights(user?.email ?? undefined, profile?.onboarding_answers, isSchool);
+  const data = isSchool ? (school?.pointsByDay ?? []).map((d) => ({ hours: d.progress })) : career.weeklyActivity;
 
   return (
     <motion.div
@@ -19,9 +26,11 @@ export function ProductivityChart() {
       transition={{ delay: 0.32 }}
       className="rounded-[24px] border border-white bg-white p-5 shadow-[0_8px_28px_rgba(24,24,27,0.05)]"
     >
-      <p className="mb-3 text-xs font-semibold text-foreground-heading">Weekly productivity</p>
+      <p className="mb-3 text-xs font-semibold text-foreground-heading">
+        {isSchool ? "Points earned · last 7 days" : "Weekly productivity"}
+      </p>
       <div className="h-24 w-full">
-        <ProductivityBarChart data={career.weeklyActivity} />
+        <ProductivityBarChart data={data} />
       </div>
     </motion.div>
   );

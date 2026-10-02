@@ -39,6 +39,7 @@ import {
   type SchoolDifficulty,
   type SchoolQuestion,
 } from "@/lib/school/questions";
+import { loadSchoolPick, saveSchoolPick, type SchoolPick } from "@/lib/school/insights";
 import { emptyScoreboard, levelFor, loadScoreboard, type ActivityKind, type SchoolScoreboard } from "@/lib/school/scoreboard";
 import {
   EXCLUDED_TOPICS,
@@ -46,6 +47,7 @@ import {
   SYLLABUS_SESSION,
   chaptersFor,
   classFromAnswers,
+  schoolChapterById,
   subjectFromAnswers,
   subjectLabel,
   type SchoolChapter,
@@ -112,21 +114,7 @@ const SECTIONS: Record<PracticeSection, { label: string; icon: React.ElementType
   },
 };
 
-type Pick = { classLevel: SchoolClass; subject: SchoolSubject };
-const pickKey = (email?: string) => `careerCopilotSchoolPick:${(email || "guest").toLowerCase()}`;
-
-function loadPick(email?: string): Pick | null {
-  try {
-    const raw = window.localStorage.getItem(pickKey(email));
-    const parsed = raw ? (JSON.parse(raw) as Pick) : null;
-    if (parsed && (parsed.classLevel === 9 || parsed.classLevel === 10) && (parsed.subject === "science" || parsed.subject === "maths")) {
-      return parsed;
-    }
-  } catch {
-    /* ignore corrupt value */
-  }
-  return null;
-}
+type Pick = SchoolPick;
 
 export function SchoolPractice({ section }: { section: PracticeSection }) {
   const { user } = useAuth();
@@ -148,7 +136,7 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
   const grade = answers?.grade;
   const hardSubject = answers?.hard_subject;
   useEffect(() => {
-    const saved = loadPick(email);
+    const saved = loadSchoolPick(email);
     setClassLevel(saved?.classLevel ?? classFromAnswers({ grade: grade ?? "" }));
     setSubject(saved?.subject ?? subjectFromAnswers({ hard_subject: hardSubject ?? "" }));
   }, [email, grade, hardSubject]);
@@ -157,7 +145,7 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
     const value: Pick = { classLevel: next.classLevel ?? classLevel, subject: next.subject ?? subject };
     setClassLevel(value.classLevel);
     setSubject(value.subject);
-    window.localStorage.setItem(pickKey(email), JSON.stringify(value));
+    saveSchoolPick(email, value);
   };
 
   useEffect(() => {
@@ -211,6 +199,16 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
     };
     run();
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ch = schoolChapterById(params.get("chapter") ?? "");
+    if (!ch) return;
+    choose({ classLevel: ch.classLevel, subject: ch.subject });
+    startChapterTest(ch.id, ch.name);
+    window.history.replaceState(null, "", window.location.pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const startBlitz = () => {
     const ids = chapters.filter((c) => !c.internalOnly).map((c) => c.id);
