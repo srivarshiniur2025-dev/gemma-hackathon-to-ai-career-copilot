@@ -12,6 +12,7 @@ import {
   type SchoolClass,
   type SchoolSubject,
 } from "@/lib/school/syllabus";
+import { ChapterSpotlight } from "./ChapterSpotlight";
 import { Chip } from "./GemmaQuestionAgent";
 import { GemmaWaiting } from "./GemmaWaiting";
 
@@ -144,6 +145,8 @@ export function GemmaNotes({ classLevel, subject, email }: Props) {
               </option>
             ))}
           </select>
+
+          <ChapterSpotlight chapter={chapter} compact className="mt-3" />
 
           {chapter ? (
             <>

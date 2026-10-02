@@ -17,6 +17,7 @@ import {
   type SchoolSubject,
 } from "@/lib/school/syllabus";
 import { cn } from "@/lib/utils";
+import { ChapterSpotlight } from "./ChapterSpotlight";
 import { GemmaWaiting } from "./GemmaWaiting";
 
 type Difficulty = "easy" | "medium" | "hard" | "mixed";
@@ -229,7 +230,9 @@ export function GemmaQuestionAgent({ classLevel, subject, email, onPlay }: Props
               ))}
             </div>
           ) : chapter ? (
-            <UserBubble>Ch {chapter.number}. {chapter.name}</UserBubble>
+            <div className="flex justify-end">
+              <ChapterSpotlight chapter={chapter} compact className="w-full max-w-sm" />
+            </div>
           ) : null}
 
           {reached("topics") && chapter ? (

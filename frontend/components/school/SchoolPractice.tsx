@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { MotionConfig, motion } from "framer-motion";
 import {
@@ -40,6 +41,7 @@ import {
   type SchoolQuestion,
 } from "@/lib/school/questions";
 import { loadSchoolPick, saveSchoolPick, type SchoolPick } from "@/lib/school/insights";
+import { heroArt } from "@/lib/school/visuals";
 import { emptyScoreboard, levelFor, loadScoreboard, type ActivityKind, type SchoolScoreboard } from "@/lib/school/scoreboard";
 import {
   EXCLUDED_TOPICS,
@@ -56,6 +58,8 @@ import {
 } from "@/lib/school/syllabus";
 import { cn } from "@/lib/utils";
 import { FlashcardsActivity, MatchPairs, TrueFalseSprint } from "./Activities";
+import { ChapterArt } from "./ChapterArt";
+import { ChapterSpotlight } from "./ChapterSpotlight";
 import { GemmaChat } from "./GemmaChat";
 import { GemmaNotes, loadNotePrefs } from "./GemmaNotes";
 import { GemmaQuestionAgent } from "./GemmaQuestionAgent";
@@ -183,9 +187,9 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
     setActivity(null);
   }, []);
 
-  const startChapterTest = (chapterId: string, name: string) => {
+  const startChapterTest = (chapterId: string, name: string, level: SchoolDifficulty | "all" = difficulty) => {
     const run = () => {
-      const pool = questionsForChapter(chapterId, difficulty === "all" ? undefined : difficulty);
+      const pool = questionsForChapter(chapterId, level === "all" ? undefined : level);
       setPlaying({
         title: `Ch test · ${name}`,
         questions: shuffle(pool),
@@ -204,8 +208,11 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
     const params = new URLSearchParams(window.location.search);
     const ch = schoolChapterById(params.get("chapter") ?? "");
     if (!ch) return;
+    const level = params.get("difficulty");
+    const picked: SchoolDifficulty | "all" = level === "easy" || level === "medium" || level === "hard" ? level : "all";
     choose({ classLevel: ch.classLevel, subject: ch.subject });
-    startChapterTest(ch.id, ch.name);
+    setDifficulty(picked);
+    startChapterTest(ch.id, ch.name, picked);
     window.history.replaceState(null, "", window.location.pathname);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -250,6 +257,12 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
     return (
       <div className="mx-auto max-w-3xl">
         <SubpageBar section={meta.label} title={playing.title} onBack={exit} />
+        <ChapterSpotlight
+          chapter={playing.chapterId ? schoolChapterById(playing.chapterId) : undefined}
+          label="Now testing"
+          detail={`${playing.questions.length} questions · ${schoolChapterById(playing.chapterId ?? "")?.unit ?? ""}`}
+          className="mb-5"
+        />
         <QuizPlayer
           key={`${playing.title}-${playing.questions[0]?.id ?? ""}-${playing.questions.length}`}
           title={playing.title}
@@ -280,7 +293,7 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
   return (
     <MotionConfig reducedMotion="user">
       <div className="space-y-6">
-        <section className="relative overflow-hidden rounded-[28px] bg-primary p-6 text-white shadow-[var(--shadow-lg)] sm:p-8">
+        <section className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0E2426] via-[#0A1719] to-[#071012] p-6 text-white shadow-[var(--shadow-lg)] sm:p-8">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 opacity-[0.35]"
@@ -327,6 +340,25 @@ export function SchoolPractice({ section }: { section: PracticeSection }) {
                 />
               </div>
             </div>
+
+            <motion.div
+              aria-hidden
+              className="relative hidden aspect-[16/10] w-[300px] xl:block"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Image
+                src={heroArt(subject)}
+                alt=""
+                fill
+                sizes="300px"
+                className="object-contain"
+                style={{
+                  maskImage: "radial-gradient(ellipse 50% 50% at 50% 50%, #000 60%, transparent 100%)",
+                  WebkitMaskImage: "radial-gradient(ellipse 50% 50% at 50% 50%, #000 60%, transparent 100%)",
+                }}
+              />
+            </motion.div>
 
             <Link
               href="/scoreboard"
@@ -714,59 +746,83 @@ function ChapterCard({
   const more = c.keyTopics.length - topics.length;
 
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-white p-5 shadow-[var(--shadow)] transition-[border-color,box-shadow] duration-300 hover:border-accent/40 hover:shadow-[var(--shadow-hover)]">
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/10 bg-gradient-to-br from-[#0E2224] via-[#0A1618] to-[#071012] p-5 text-white shadow-[0_10px_34px_rgba(7,16,18,0.28)] transition-[border-color,box-shadow] duration-300 hover:border-accent-light/40 hover:shadow-[0_18px_50px_rgba(13,148,136,0.22)]">
       <span
         aria-hidden
-        className="absolute inset-x-0 top-0 h-0.5 origin-left scale-x-0 bg-accent transition-transform duration-300 group-hover:scale-x-100"
+        className="absolute inset-x-0 top-0 h-0.5 origin-left scale-x-0 bg-accent-light transition-transform duration-300 group-hover:scale-x-100"
       />
-      <div className="flex items-start justify-between gap-3">
+      <ChapterArt
+        chapterId={c.id}
+        subject={c.subject}
+        alt=""
+        className="absolute -right-4 top-10 w-[42%] max-w-[150px] opacity-90"
+        sizes="150px"
+      />
+      <div className="relative flex items-start justify-between gap-3">
         <div className="flex items-baseline gap-3">
-          <span className="font-heading text-4xl font-bold leading-none text-zinc-200 transition-colors duration-300 group-hover:text-accent/30">
+          <span className="font-heading text-4xl font-bold leading-none text-white/25 transition-colors duration-300 group-hover:text-accent-light/60">
             {String(c.number).padStart(2, "0")}
           </span>
-          <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-hover">
+          <span className="rounded-full bg-accent-light/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#042F2E]">
             {c.unit}
           </span>
         </div>
         {mastery != null ? (
-          <ProgressRing value={mastery} size={42} stroke={4}>
-            <span className={cn("text-[10px] font-bold", mastery >= 80 ? "text-accent" : "text-foreground-heading")}>{mastery}%</span>
-          </ProgressRing>
+          <span
+            className={cn(
+              "shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold",
+              mastery >= 80 ? "border-accent-light/40 bg-accent/20 text-accent-light" : "border-amber-300/30 bg-amber-300/10 text-amber-200"
+            )}
+          >
+            {mastery >= 80 ? `Mastered · ${mastery}%` : `${mastery}% · revise`}
+          </span>
         ) : (
-          <span className="rounded-full border border-dashed border-border-hover px-2 py-0.5 text-[10px] font-medium text-muted">Not started</span>
+          <span className="shrink-0 rounded-full border border-white/15 px-2.5 py-0.5 text-[10px] font-medium text-white/70">Not started</span>
         )}
       </div>
 
-      <p className="mt-3 font-heading text-base font-bold leading-snug text-foreground-heading">{c.name}</p>
+      <p className="relative mt-3 max-w-[62%] font-heading text-base font-bold leading-snug text-white">{c.name}</p>
       {c.internalOnly ? (
-        <p className="mt-1 text-[11px] font-semibold text-warning">School / internal assessment only this session</p>
+        <p className="relative mt-1 max-w-[62%] text-[11px] font-semibold text-amber-200">School / internal assessment only this session</p>
       ) : null}
 
-      <div className="mt-3 flex flex-wrap gap-1.5">
+      <div className="relative mt-3 flex max-w-[62%] flex-wrap gap-1.5">
         {topics.map((t) => (
-          <span key={t} className="rounded-md bg-background-secondary px-2 py-0.5 text-[11px] text-muted-secondary">
+          <span key={t} className="rounded-md border border-white/10 bg-white/[0.05] px-2 py-0.5 text-[11px] text-white/75">
             {t}
           </span>
         ))}
-        {more > 0 ? <span className="rounded-md px-1 py-0.5 text-[11px] text-muted">+{more} more</span> : null}
+        {more > 0 ? <span className="rounded-md px-1 py-0.5 text-[11px] text-white/55">+{more} more</span> : null}
       </div>
-      {excluded?.length ? <p className="mt-2 text-[11px] text-muted">Not in board exam: {excluded.join(", ")}</p> : null}
+      {excluded?.length ? <p className="relative mt-2 text-[11px] text-white/55">Not in board exam: {excluded.join(", ")}</p> : null}
 
-      <div className="mt-auto pt-5">
-        <div className="flex h-1.5 overflow-hidden rounded-full bg-background-secondary" aria-hidden>
-          <span className="bg-accent-light/50" style={{ width: `${(mix.easy / Math.max(all.length, 1)) * 100}%` }} />
-          <span className="bg-accent" style={{ width: `${(mix.medium / Math.max(all.length, 1)) * 100}%` }} />
-          <span className="bg-primary" style={{ width: `${(mix.hard / Math.max(all.length, 1)) * 100}%` }} />
+      <div className="relative mt-auto pt-5">
+        <div className="flex h-1.5 overflow-hidden rounded-full bg-white/10" aria-hidden>
+          <span className="bg-[#99F6E4]" style={{ width: `${(mix.easy / Math.max(all.length, 1)) * 100}%` }} />
+          <span className="bg-accent-light" style={{ width: `${(mix.medium / Math.max(all.length, 1)) * 100}%` }} />
+          <span className="bg-accent-hover" style={{ width: `${(mix.hard / Math.max(all.length, 1)) * 100}%` }} />
         </div>
-        <p className="mt-1.5 text-[11px] text-muted">
+        <p className="mt-1.5 text-[11px] text-white/60">
           {mix.easy} easy · {mix.medium} medium · {mix.hard} hard
         </p>
 
         <div className="mt-4 flex gap-2">
-          <Button size="sm" className="flex-1" disabled={!count} onClick={onTest}>
+          <Button
+            size="sm"
+            className="flex-1 cursor-pointer bg-gradient-to-r from-[#99F6E4] to-accent-light font-bold text-[#042F2E] hover:opacity-95"
+            disabled={!count}
+            onClick={onTest}
+          >
             <ListChecks className="h-4 w-4" /> Start test · {count} Qs
           </Button>
-          <Button size="sm" variant="outline" onClick={onFlashcards} aria-label={`Flashcards for ${c.name}`} disabled={!cards}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="cursor-pointer border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+            onClick={onFlashcards}
+            aria-label={`Flashcards for ${c.name}`}
+            disabled={!cards}
+          >
             <Layers className="h-4 w-4" /> {cards}
           </Button>
         </div>
