@@ -13,18 +13,26 @@ const PARTICLES = [
   { left: "86%", delay: 3.3, size: 3 },
 ];
 
-type Props = {
-  chapterId: string;
-  subject?: SchoolSubject;
+type ArtProps = {
+  src: string;
   alt: string;
   className?: string;
-  /** Stronger glow and particles, used for the chapter the student has selected. */
+  /** Stronger glow and particles, used for the item the learner has selected. */
   active?: boolean;
   priority?: boolean;
   sizes?: string;
 };
 
-export function ChapterArt({ chapterId, subject, alt, className, active = false, priority, sizes = "160px" }: Props) {
+type Props = Omit<ArtProps, "src"> & {
+  chapterId: string;
+  subject?: SchoolSubject;
+};
+
+export function ChapterArt({ chapterId, subject, ...rest }: Props) {
+  return <TrackArt src={chapterArt(chapterId, subject)} {...rest} />;
+}
+
+export function TrackArt({ src, alt, className, active = false, priority, sizes = "160px" }: ArtProps) {
   const reduce = useReducedMotion();
   const float = reduce ? undefined : { y: [0, -6, 0] };
 
@@ -42,7 +50,7 @@ export function ChapterArt({ chapterId, subject, alt, className, active = false,
         transition={{ duration: active ? 3.2 : 5, repeat: Infinity, ease: "easeInOut" }}
       >
         <Image
-          src={chapterArt(chapterId, subject)}
+          src={src}
           alt={alt}
           fill
           sizes={sizes}

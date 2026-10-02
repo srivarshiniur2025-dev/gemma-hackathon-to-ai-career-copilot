@@ -79,3 +79,49 @@ export function chapterArt(chapterId: string, subject: SchoolSubject = "science"
 export function heroArt(subject: SchoolSubject): string {
   return subject === "maths" ? "/school/hero-maths.webp" : "/school/hero-science.webp";
 }
+
+export function trackHeroArt(track: "neet" | "high_school" | "developer"): string {
+  if (track === "neet") return "/school/hero-neet.webp";
+  if (track === "high_school") return "/school/hero-boards.webp";
+  return "/school/hero-developer.webp";
+}
+
+const TOPIC_KEYWORDS: [RegExp, ChapterArtKey][] = [
+  [/genetic|inherit|biotech|reproduc|heredity/, "genetics"],
+  [/cell|photosynth|respiration|plant/, "cell"],
+  [/human|physio|breath|endocrine|anatomy|digest|neural|body/, "body"],
+  [/ecolog|environment|diversity|living world|population|conservation/, "earth"],
+  [/optic|light|ray/, "light"],
+  [/electr|magnet|current/, "electricity"],
+  [/wave|sound|oscillat|shm/, "sound"],
+  [/mechanic|kinemat|motion|force|gravit|work|laws/, "motion"],
+  [/atom|nucle|modern|periodic|organic|carbon|bond/, "atom"],
+  [/chem|mole|thermo|equilib|kinetic|solution|redox|acid|block|coordination|reaction/, "chemistry"],
+  [/trig|height/, "trigonometry"],
+  [/probab|statist/, "probability"],
+  [/geometr|triangle|circle/, "geometry"],
+  [/graph|coordinate|polynom|linear|quadratic|calculus|function/, "graphs"],
+  [/number|sequence|progression|algebra/, "numbers"],
+];
+
+const SUBJECT_FALLBACK: Record<string, ChapterArtKey> = {
+  physics: "motion",
+  chemistry: "chemistry",
+  biology: "cell",
+  pcb: "atom",
+  science: "inquiry",
+  math: "graphs",
+  maths: "graphs",
+};
+
+/** Best-matching chapter illustration for a free-text test title (NEET / board mocks). */
+export function topicArt(text: string, subject: string, kind?: string): string {
+  const t = text.toLowerCase();
+  const match = TOPIC_KEYWORDS.find(([re]) => re.test(t))?.[1];
+  const key = match ?? (kind === "pyq" ? "inquiry" : SUBJECT_FALLBACK[subject] ?? "inquiry");
+  return `/school/ch-${key}.webp`;
+}
+
+export function skillArt(domain: string): string {
+  return domain === "mixed" ? "/school/dev-system-design.webp" : `/school/dev-${domain}.webp`;
+}
