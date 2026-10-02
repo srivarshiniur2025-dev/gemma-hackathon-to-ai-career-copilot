@@ -147,6 +147,13 @@ def chat_user_prompt(payload: dict) -> str:
     return "\n".join(lines)
 
 
+NOTE_BUDGETS = {
+    "short": "about 250 words total; max 3 sections × 3 points, 3 key terms, 2 examples, 2 mistakes, 1 memory trick, 2 exam tips, 3 quick-check questions.",
+    "standard": "about 450 words total; max 5 sections × 4 points, 5 key terms, 3 examples, 3 mistakes, 2 memory tricks, 3 exam tips, 4 quick-check questions.",
+    "detailed": "about 650 words total; max 6 sections × 4 points, 6 key terms, 5 worked examples, 3 mistakes, 2 memory tricks, 3 exam tips, 5 quick-check questions.",
+}
+
+
 def notes_user_prompt(payload: dict) -> str:
     topics = payload.get("topics") or []
     lines = [
@@ -156,6 +163,8 @@ def notes_user_prompt(payload: dict) -> str:
         f"Chapter {payload.get('chapter_number')}: {payload.get('chapter_name')}",
         f"Topics to cover: {', '.join(topics) if topics else ', '.join(payload.get('key_topics') or [])}",
         f"Note style: {payload.get('style', 'standard')} (short = one-page revision, standard = full notes, detailed = with extra worked examples)",
+        f"Length budget: {NOTE_BUDGETS.get(payload.get('style') or 'standard', NOTE_BUDGETS['standard'])} "
+        "Each point is one short line. Stay inside the budget even if many topics are picked — cover each topic briefly.",
     ]
     if payload.get("excluded"):
         lines.append(f"Excluded (do not include): {', '.join(payload['excluded'])}")

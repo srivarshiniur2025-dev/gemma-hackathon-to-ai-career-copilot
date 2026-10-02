@@ -22,6 +22,7 @@ from backend.prompts import resume as resume_prompts
 from backend.prompts import roadmap as roadmap_prompts
 
 JSON_SUFFIX = "\n\nRespond with valid JSON only. No markdown fences, no commentary."
+GEMMA_TIMEOUT_MS = 240_000
 
 
 class GemmaError(Exception):
@@ -114,7 +115,11 @@ class GemmaService:
     @property
     def client(self) -> genai.Client:
         if self._client is None:
-            self._client = genai.Client(api_key=self._get_api_key())
+            # Stays below the Vercel function maxDuration (vercel.json) so slow calls fail with a clean 503.
+            self._client = genai.Client(
+                api_key=self._get_api_key(),
+                http_options=types.HttpOptions(timeout=GEMMA_TIMEOUT_MS),
+            )
         return self._client
 
     def _build_config(self, system: str, temperature: float = 0.7) -> types.GenerateContentConfig:

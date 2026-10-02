@@ -18,7 +18,7 @@
       "entrypoint": "backend.main:app",
       "functions": {
         "backend/main.py": {
-          "maxDuration": 60
+          "maxDuration": 300
         }
       }
     }

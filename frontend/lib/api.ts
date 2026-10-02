@@ -54,6 +54,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   }
 
   if (!res.ok) {
+    if (res.status === 504 || /FUNCTION_INVOCATION_TIMEOUT|GATEWAY_TIMEOUT/.test(raw)) {
+      throw new Error("Gemma took too long to answer. Please try again — shorter styles or fewer topics are faster.");
+    }
     const body = parsed && typeof parsed === "object" ? (parsed as { detail?: unknown; message?: unknown }) : null;
     const detail = formatApiDetail(
       body?.detail ?? body?.message ?? (raw ? raw.slice(0, 280) : `Request failed: ${res.status}`)
